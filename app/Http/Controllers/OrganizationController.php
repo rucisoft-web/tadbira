@@ -11,7 +11,11 @@ class OrganizationController extends Controller
     public function switch(Request $request, Organization $organization): RedirectResponse
     {
         abort_unless($request->user()->organizations()->whereKey($organization->id)->exists(), 403);
-        $request->user()->update(['current_organization_id' => $organization->id]);
+        if ($request->user()->isGuest()) {
+            $request->session()->put('guest_organization_id', $organization->id);
+        } else {
+            $request->user()->update(['current_organization_id' => $organization->id]);
+        }
 
         return redirect()->route('dashboard');
     }

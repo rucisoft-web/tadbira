@@ -34,6 +34,7 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'auth' => [
                 'user' => $request->user()?->only(['id', 'name', 'email']),
+                'is_guest' => (bool) $request->user()?->isGuest(),
             ],
             'organization' => function () use ($request) {
                 $org = $request->user()?->activeOrganization();
@@ -51,6 +52,7 @@ class HandleInertiaRequests extends Middleware
             'terms' => fn () => ($request->user()?->activeOrganization()?->terminology() ?? new Terminology)->all(),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
             ],
         ];
     }

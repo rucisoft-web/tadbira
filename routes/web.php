@@ -9,13 +9,18 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TemplateController;
+use App\Support\GuestDemo;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
     return auth()->check()
         ? redirect()->route('dashboard')
-        : Inertia::render('Welcome', ['canRegister' => Route::has('register')]);
+        : Inertia::render('Welcome', [
+            'canRegister' => Route::has('register'),
+            'demos' => GuestDemo::cards(),
+            'links' => config('tadbira.landing'),
+        ]);
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

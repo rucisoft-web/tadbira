@@ -14,6 +14,20 @@
 
 return [
 
+    // Tombol "Masuk sebagai tamu" di halaman masuk. Tamu hanya bisa melihat (hanya-baca).
+    'guest' => [
+        'enabled' => (bool) env('TADBIRA_GUEST_LOGIN', false),
+        'email' => env('TADBIRA_GUEST_EMAIL', 'tamu@tadbira.test'),
+    ],
+
+    // Tautan di halaman depan (program Rucisoft untuk Tadbira).
+    'landing' => [
+        'site' => 'https://rucisoft.id',
+        'academy' => env('TADBIRA_URL_ACADEMY', 'https://rucisoft.id/academy?produk=tadbira'),
+        'solution' => env('TADBIRA_URL_SOLUTION', 'https://rucisoft.id/solusi/tadbira'),
+        'whatsapp' => env('TADBIRA_WHATSAPP', '6281199892939'),
+    ],
+
     'sectors' => [
         'kementerian' => 'Kementerian',
         'lembaga' => 'Lembaga',

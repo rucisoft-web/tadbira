@@ -66,10 +66,34 @@ class User extends Authenticatable
      */
     public function activeOrganization(): ?Organization
     {
+        // Akun tamu dipakai bersama; pilihan organisasinya disimpan per sesi, bukan di basis data.
+        if ($this->isGuest() && ($id = session('guest_organization_id'))) {
+            $org = $this->organizations()->whereKey($id)->first();
+            if ($org) {
+                return $org;
+            }
+        }
+
         if ($this->current_organization_id && $this->organizations()->whereKey($this->current_organization_id)->exists()) {
             return $this->currentOrganization;
         }
 
         return $this->organizations()->orderBy('organizations.id')->first();
+    }
+
+    /** Akun tamu bila fitur masuk sebagai tamu diaktifkan dan akunnya ada. */
+    public static function guestAccount(): ?self
+    {
+        if (! config('tadbira.guest.enabled')) {
+            return null;
+        }
+
+        return static::where('email', config('tadbira.guest.email'))->first();
+    }
+
+    /** Akun tamu bersama: hanya-baca. */
+    public function isGuest(): bool
+    {
+        return strcasecmp($this->email, (string) config('tadbira.guest.email')) === 0;
     }
 }

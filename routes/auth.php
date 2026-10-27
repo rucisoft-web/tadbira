@@ -22,6 +22,7 @@ Route::middleware('guest')->group(function () {
 
     Route::post('login', [AuthenticatedSessionController::class, 'store']);
 
+
     Route::get('forgot-password', [PasswordResetLinkController::class, 'create'])
         ->name('password.request');
 
@@ -57,3 +58,8 @@ Route::middleware('auth')->group(function () {
     Route::post('logout', [AuthenticatedSessionController::class, 'destroy'])
         ->name('logout');
 });
+
+// Masuk sebagai tamu (hanya-baca), opsional langsung ke organisasi demo tertentu: ?organisasi={ulid}
+Route::get('masuk-tamu', [AuthenticatedSessionController::class, 'guest'])
+    ->middleware('throttle:30,1')
+    ->name('login.guest');

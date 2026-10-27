@@ -10,6 +10,8 @@ const open = ref(false);
 const terms = computed(() => page.props.terms ?? {});
 const org = computed(() => page.props.organization);
 const flash = computed(() => page.props.flash?.success);
+const flashError = computed(() => page.props.flash?.error);
+const isGuest = computed(() => page.props.auth?.is_guest);
 
 const nav = computed(() => [
     { label: 'Dasbor', route: 'dashboard', active: 'dashboard', icon: 'M3 13h8V3H3zm0 8h8v-6H3zm10 0h8V11h-8zm0-18v6h8V3z' },
@@ -101,6 +103,15 @@ const switchOrg = (ulid) => router.post(route('organizations.switch', ulid));
                     </Dropdown>
                 </div>
             </header>
+
+            <div v-if="isGuest" class="flex flex-wrap items-center gap-x-3 gap-y-1 border-b border-amber-200 bg-amber-50 px-4 py-2 text-sm text-amber-900 sm:px-6 lg:px-8">
+                <span><strong>Mode tamu.</strong> Anda melihat data demo dan tidak bisa mengubah apa pun.</span>
+                <Link :href="route('logout')" method="post" as="button" class="font-medium underline hover:text-amber-700">Keluar</Link>
+            </div>
+
+            <div v-if="flashError" class="mx-4 mt-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 sm:mx-6 lg:mx-8">
+                {{ flashError }}
+            </div>
 
             <div v-if="flash" class="mx-4 mt-4 rounded-xl border border-zamrud-200 bg-zamrud-50 px-4 py-3 text-sm text-zamrud-800 sm:mx-6 lg:mx-8">
                 {{ flash }}

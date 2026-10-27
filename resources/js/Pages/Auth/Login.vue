@@ -1,5 +1,6 @@
 <script setup>
 import Checkbox from '@/Components/Checkbox.vue';
+import DemoCards from '@/Components/DemoCards.vue';
 import GuestLayout from '@/Layouts/GuestLayout.vue';
 import InputError from '@/Components/InputError.vue';
 import InputLabel from '@/Components/InputLabel.vue';
@@ -13,6 +14,10 @@ defineProps({
     },
     status: {
         type: String,
+    },
+    demos: {
+        type: Array,
+        default: () => [],
     },
 });
 
@@ -100,5 +105,11 @@ const submit = () => {
                 </PrimaryButton>
             </div>
         </form>
+
+        <div v-if="demos.length" class="mt-6 border-t border-gading-200 pt-5">
+            <h2 class="text-sm font-semibold text-zamrud-950">Coba data demo tanpa akun</h2>
+            <p class="mb-3 text-xs text-slate-500">Data rekaan untuk belajar. Mode tamu hanya untuk melihat.</p>
+            <DemoCards :demos="demos" compact />
+        </div>
     </GuestLayout>
 </template>
