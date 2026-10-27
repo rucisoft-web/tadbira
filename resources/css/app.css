@@ -1,0 +1,30 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+    .kartu {
+        @apply rounded-2xl border border-gading-200 bg-white shadow-sm;
+    }
+    .judul-kartu {
+        @apply text-sm font-semibold text-zamrud-900;
+    }
+    .tombol {
+        @apply inline-flex items-center gap-2 rounded-lg bg-zamrud-700 px-4 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-zamrud-800 focus:outline-none focus:ring-2 focus:ring-emas-400 focus:ring-offset-2 disabled:opacity-50;
+    }
+    .tombol-sekunder {
+        @apply inline-flex items-center gap-2 rounded-lg border border-zamrud-200 bg-white px-4 py-2 text-sm font-semibold text-zamrud-800 shadow-sm transition hover:bg-zamrud-50 focus:outline-none focus:ring-2 focus:ring-emas-400 focus:ring-offset-2;
+    }
+    .masukan {
+        @apply rounded-lg border-gading-200 text-sm shadow-sm focus:border-zamrud-500 focus:ring-zamrud-500;
+    }
+    .label {
+        @apply mb-1 block text-xs font-semibold uppercase tracking-wide text-slate-500;
+    }
+    .tab {
+        @apply whitespace-nowrap border-b-2 border-transparent px-1 pb-3 text-sm font-semibold text-slate-500 transition hover:text-zamrud-800;
+    }
+    .tab-aktif {
+        @apply border-emas-500 text-zamrud-900;
+    }
+}
