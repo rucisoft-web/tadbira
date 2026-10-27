@@ -24,7 +24,7 @@ class Project extends Model
     ];
 
     protected $fillable = [
-        'organization_id', 'fiscal_year_id', 'leader_id', 'code', 'name', 'description', 'category', 'color',
+        'organization_id', 'fiscal_year_id', 'goal_id', 'leader_id', 'code', 'name', 'description', 'category', 'color',
         'status', 'scheduling_direction', 'start_date', 'target_finish_date', 'is_template', 'template_id',
         'budget_amount', 'created_by',
     ];
@@ -47,6 +47,11 @@ class Project extends Model
     public function getRouteKeyName(): string
     {
         return 'ulid';
+    }
+
+    public function goal(): BelongsTo
+    {
+        return $this->belongsTo(Goal::class);
     }
 
     public function scopeTemplates(Builder $q): Builder

@@ -32,6 +32,8 @@ class ProjectController extends Controller
             'fiscalYears' => $org->fiscalYears()->get(['ulid', 'code', 'year', 'status']),
             'fiscalYear' => $fy ? Arr::only($fy->toArray(), ['ulid', 'code', 'year', 'start_date', 'end_date']) : null,
             'projects' => $fy ? $portfolio->summary($fy)['projects'] : [],
+            'goals' => $fy ? $fy->goals()->get(['id', 'code', 'title']) : [],
+            'filters' => ['unit' => $request->string('unit')->toString(), 'goal' => $request->string('sasaran')->toString()],
             'templates' => Project::templates()->where('organization_id', $org->id)
                 ->withCount(['tasks' => fn ($q) => $q->where('kind', '!=', 'phase')])
                 ->get(['id', 'ulid', 'name', 'category', 'description']),
@@ -43,7 +45,7 @@ class ProjectController extends Controller
         $org = $this->organization($request);
 
         return Inertia::render('Projects/Create', [
-            'fiscalYears' => $org->fiscalYears()->get(['ulid', 'code', 'year', 'start_date', 'end_date']),
+            'fiscalYears' => $org->fiscalYears()->with('goals:id,fiscal_year_id,code,title')->get(['id', 'ulid', 'code', 'year', 'start_date', 'end_date']),
             'selectedFiscalYear' => $this->fiscalYear($request, $org)?->ulid,
             'templates' => Project::templates()->where('organization_id', $org->id)
                 ->withCount('tasks')->get(['id', 'ulid', 'name', 'category', 'description']),
@@ -66,12 +68,15 @@ class ProjectController extends Controller
             'anchor_date' => ['required', 'date'],
             'budget_amount' => ['nullable', 'numeric', 'min:0'],
             'leader_id' => ['nullable', 'integer'],
+            'goal_id' => ['nullable', 'integer'],
         ]);
 
         $fy = $org->fiscalYears()->where('ulid', $data['fiscal_year'])->firstOrFail();
+        $goalId = ! empty($data['goal_id']) ? $fy->goals()->whereKey($data['goal_id'])->value('id') : null;
         $attributes = [
             'organization_id' => $org->id,
             'fiscal_year_id' => $fy->id,
+            'goal_id' => $goalId,
             'leader_id' => $data['leader_id'] ?? $request->user()->id,
             'created_by' => $request->user()->id,
             'name' => $data['name'],
@@ -104,7 +109,7 @@ class ProjectController extends Controller
     public function show(Request $request, Project $project, PortfolioService $portfolio): Response
     {
         $this->authorizeProject($request, $project);
-        $project->load(['fiscalYear', 'leader:id,name', 'tasks.assignees:id,name', 'dependencies']);
+        $project->load(['fiscalYear', 'goal.indicators', 'leader:id,name', 'tasks.assignees:id,name', 'dependencies']);
 
         $tasks = $this->orderedTasks($project->tasks);
         $wbsById = $tasks->pluck('wbs_code', 'id')->all();
@@ -132,7 +137,14 @@ class ProjectController extends Controller
                 'status_label' => $project->statusLabel(),
                 'leader' => $project->leader?->name,
                 'fiscal_year' => $project->fiscalYear ? Arr::only($project->fiscalYear->toArray(), ['ulid', 'code', 'start_date', 'end_date']) : null,
+                'goal_id' => $project->goal_id,
+                'goal' => $project->goal ? [
+                    'code' => $project->goal->code,
+                    'title' => $project->goal->title,
+                    'indicators' => $project->goal->indicators->map->only(['name', 'target', 'realization', 'score']),
+                ] : null,
             ],
+            'goals' => $project->fiscalYear ? $project->fiscalYear->goals()->get(['id', 'code', 'title']) : [],
             'summary' => $summary,
             'tasks' => $tasks->map(fn (Task $t) => [
                 'id' => $t->id,
@@ -174,6 +186,7 @@ class ProjectController extends Controller
             'scheduling_direction' => ['sometimes', Rule::in(['forward', 'backward'])],
             'anchor_date' => ['sometimes', 'date'],
             'budget_amount' => ['sometimes', 'numeric', 'min:0'],
+            'goal_id' => ['sometimes', 'nullable', Rule::exists('goals', 'id')->where('fiscal_year_id', $project->fiscal_year_id)],
         ]);
 
         if (isset($data['anchor_date'])) {

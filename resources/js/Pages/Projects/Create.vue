@@ -29,6 +29,7 @@ const form = useForm({
     anchor_date: fy0 ? fy0.start_date : new Date().toISOString().slice(0, 10),
     budget_amount: '',
     leader_id: usePage().props.auth.user.id,
+    goal_id: '',
 });
 
 const fy = computed(() => props.fiscalYears.find((f) => f.ulid === form.fiscal_year));
@@ -151,9 +152,18 @@ const submit = () => form.post(route('projects.store'));
                     </div>
                 </div>
 
-                <div>
-                    <label class="label">Kategori</label>
-                    <input v-model="form.category" type="text" class="masukan w-full">
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <label class="label">{{ terms.work_unit }} / kategori</label>
+                        <input v-model="form.category" type="text" class="masukan w-full">
+                    </div>
+                    <div v-if="fy?.goals?.length">
+                        <label class="label">{{ terms.goal }}</label>
+                        <select v-model="form.goal_id" class="masukan w-full">
+                            <option value="">Belum dikaitkan</option>
+                            <option v-for="g in fy.goals" :key="g.id" :value="g.id">{{ g.code }} · {{ g.title }}</option>
+                        </select>
+                    </div>
                 </div>
                 <div>
                     <label class="label">Uraian</label>

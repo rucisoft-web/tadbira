@@ -1,19 +1,46 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import AuthenticatedLayout from '@/Layouts/AuthenticatedLayout.vue';
 import HealthBadge from '@/Components/HealthBadge.vue';
 import ProgressBar from '@/Components/ProgressBar.vue';
 import { persen, rupiahRingkas, tanggal, warnaProyek } from '@/lib/format';
 
-const props = defineProps({ fiscalYears: Array, fiscalYear: Object, projects: Array, templates: Array });
+const props = defineProps({
+    fiscalYears: Array,
+    fiscalYear: Object,
+    projects: Array,
+    templates: Array,
+    goals: { type: Array, default: () => [] },
+    filters: { type: Object, default: () => ({}) },
+});
 const terms = computed(() => usePage().props.terms);
 const q = ref('');
 const status = ref('');
+const unit = ref(props.filters.unit ?? '');
+const goal = ref(props.filters.goal ?? '');
+const sort = ref('start');
+
+const units = computed(() => [...new Set(props.projects.map((p) => p.category).filter(Boolean))].sort());
+const sorters = {
+    start: (a, b) => String(a.start).localeCompare(String(b.start)),
+    gap: (a, b) => (a.progress - a.planned) - (b.progress - b.planned),
+    budget: (a, b) => b.budget - a.budget,
+    absorption: (a, b) => a.absorption - b.absorption,
+};
 
 const filtered = computed(() => props.projects.filter((p) =>
     (!q.value || `${p.name} ${p.code ?? ''} ${p.category ?? ''}`.toLowerCase().includes(q.value.toLowerCase()))
-    && (!status.value || p.health === status.value)));
+    && (!status.value || p.health === status.value)
+    && (!unit.value || p.category === unit.value)
+    && (!goal.value || String(p.goal_id) === String(goal.value))).sort(sorters[sort.value]));
+
+// Daftar panjang ditampilkan bertahap.
+const PAGE = 50;
+const limit = ref(PAGE);
+watch([q, status, unit, goal, sort], () => (limit.value = PAGE));
+const visible = computed(() => filtered.value.slice(0, limit.value));
+const sum = (key) => filtered.value.reduce((t, p) => t + (p[key] || 0), 0);
 
 const selectFy = (ulid) => router.get(route('projects.index'), { ta: ulid });
 </script>
@@ -39,12 +66,29 @@ const selectFy = (ulid) => router.get(route('projects.index'), { ta: ulid });
                 <option value="waspada">Perlu perhatian</option>
                 <option value="kritis">Terlambat</option>
             </select>
+            <select v-if="units.length > 1" v-model="unit" class="masukan">
+                <option value="">Semua {{ terms.work_unit?.toLowerCase() }}</option>
+                <option v-for="u in units" :key="u" :value="u">{{ u }}</option>
+            </select>
+            <select v-if="goals.length" v-model="goal" class="masukan max-w-xs">
+                <option value="">Semua {{ terms.goal?.toLowerCase() }}</option>
+                <option v-for="g in goals" :key="g.id" :value="String(g.id)">{{ g.code }} · {{ g.title }}</option>
+            </select>
+            <select v-model="sort" class="masukan">
+                <option value="start">Urut: tanggal mulai</option>
+                <option value="gap">Urut: paling tertinggal</option>
+                <option value="budget">Urut: anggaran terbesar</option>
+                <option value="absorption">Urut: serapan terendah</option>
+            </select>
             <div class="ml-auto flex gap-2">
                 <Link :href="route('budget.import', { ta: fiscalYear?.ulid })" class="tombol-sekunder">{{ terms.budget_import }}</Link>
                 <Link :href="route('projects.create', { ta: fiscalYear?.ulid })" class="tombol">+ {{ terms.project }} baru</Link>
             </div>
         </div>
 
+        <p class="mb-2 text-sm text-slate-500">
+            {{ filtered.length }} {{ terms.project?.toLowerCase() }} · anggaran {{ rupiahRingkas(sum('budget')) }} · {{ terms.realization?.toLowerCase() }} {{ rupiahRingkas(sum('realized')) }}
+        </p>
         <div class="kartu overflow-x-auto">
             <table class="min-w-full text-sm">
                 <thead class="bg-gading-50 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">
@@ -58,13 +102,13 @@ const selectFy = (ulid) => router.get(route('projects.index'), { ta: ulid });
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-gading-100">
-                    <tr v-for="(p, i) in filtered" :key="p.ulid" class="hover:bg-gading-50/60">
+                    <tr v-for="(p, i) in visible" :key="p.ulid" class="hover:bg-gading-50/60">
                         <td class="px-4 py-3">
                             <Link :href="route('projects.show', p.ulid)" class="flex items-start gap-3">
                                 <span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full" :style="{ background: warnaProyek(p, i) }" />
                                 <span>
                                     <span class="font-semibold text-zamrud-950 hover:text-zamrud-600">{{ p.name }}</span>
-                                    <span class="block text-xs text-slate-500">{{ p.code }} · {{ p.status_label }} · {{ p.leader }}</span>
+                                    <span class="block text-xs text-slate-500">{{ [p.code, p.category, p.status_label, p.leader].filter(Boolean).join(' · ') }}</span>
                                 </span>
                             </Link>
                         </td>
@@ -88,6 +132,11 @@ const selectFy = (ulid) => router.get(route('projects.index'), { ta: ulid });
                     </tr>
                 </tbody>
             </table>
+            <div v-if="filtered.length > visible.length" class="border-t border-gading-100 p-3 text-center">
+                <button type="button" class="tombol-sekunder" @click="limit += PAGE">
+                    Tampilkan {{ Math.min(PAGE, filtered.length - visible.length) }} lagi ({{ filtered.length - visible.length }} tersisa)
+                </button>
+            </div>
         </div>
 
         <section class="mt-8">

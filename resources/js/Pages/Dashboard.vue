@@ -9,12 +9,16 @@ import PortfolioGantt from '@/Components/PortfolioGantt.vue';
 import StatusDoughnut from '@/Components/Charts/StatusDoughnut.vue';
 import ProgressBars from '@/Components/Charts/ProgressBars.vue';
 import BudgetLine from '@/Components/Charts/BudgetLine.vue';
+import UnitBars from '@/Components/Charts/UnitBars.vue';
+import GoalPanel from '@/Components/GoalPanel.vue';
 import { persen, rupiahRingkas, tanggal, warnaKesehatan, warnaProyek } from '@/lib/format';
 
 const props = defineProps({
     fiscalYears: Array,
     fiscalYear: Object,
     portfolio: Object,
+    units: { type: Array, default: () => [] },
+    unit: String,
     today: String,
 });
 
@@ -35,6 +39,20 @@ const attention = computed(() => [...projects.value]
     .slice(0, 5));
 
 const selectFy = (ulid) => router.get(route('dashboard'), { ta: ulid }, { preserveState: false });
+const selectUnit = (unit) => router.get(route('dashboard'), { ta: props.fiscalYear?.ulid, unit: unit || undefined }, { preserveScroll: true });
+
+// Untuk ratusan kegiatan, grafik per kegiatan dibatasi pada yang paling perlu dilihat.
+const MAX_BARS = 15;
+const MAX_GANTT = 20;
+const progressProjects = computed(() => (projects.value.length <= MAX_BARS
+    ? projects.value
+    : [...projects.value].sort((a, b) => (a.progress - a.planned) - (b.progress - b.planned)).slice(0, MAX_BARS)));
+const ganttProjects = computed(() => (projects.value.length <= MAX_GANTT
+    ? projects.value
+    : [...projects.value].sort((a, b) => b.budget - a.budget).slice(0, MAX_GANTT)
+        .sort((a, b) => String(a.start).localeCompare(String(b.start)))));
+const units = computed(() => props.portfolio?.by_unit ?? []);
+const goals = computed(() => props.portfolio?.goals ?? []);
 
 const showNewFy = ref(false);
 const fyForm = useForm({ year: new Date().getFullYear() + 1, ceiling_amount: '' });
@@ -55,6 +73,10 @@ const createFy = () => fyForm.post(route('fiscal-years.store'), { onSuccess: () 
                     @change="selectFy($event.target.value)"
                 >
                     <option v-for="fy in fiscalYears" :key="fy.ulid" :value="fy.ulid">{{ fy.code }}</option>
+                </select>
+                <select v-if="props.units.length > 1" class="masukan py-1.5" :value="unit ?? ''" @change="selectUnit($event.target.value)">
+                    <option value="">Semua {{ terms.work_unit?.toLowerCase() }}</option>
+                    <option v-for="u in props.units" :key="u" :value="u">{{ u }}</option>
                 </select>
                 <button type="button" class="text-xs font-semibold text-zamrud-700 hover:underline" @click="showNewFy = !showNewFy">
                     + {{ terms.fiscal_year }}
@@ -81,7 +103,7 @@ const createFy = () => fyForm.post(route('fiscal-years.store'), { onSuccess: () 
                 <div class="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-emas-500/10" />
                 <div class="relative flex flex-wrap items-end justify-between gap-6">
                     <div>
-                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-emas-300">{{ fiscalYear.code }}</p>
+                        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-emas-300">{{ fiscalYear.code }}<template v-if="unit"> · {{ unit }}</template></p>
                         <h2 class="mt-1 text-2xl font-bold">{{ totals.count }} {{ terms.project?.toLowerCase() }} dipantau</h2>
                         <p class="mt-1 text-sm text-zamrud-100/80">
                             Kemajuan rata-rata {{ persen(totals.avg_progress, 1) }} dari rencana {{ persen(totals.avg_planned, 1) }} per {{ tanggal(today) }}.
@@ -143,27 +165,52 @@ const createFy = () => fyForm.post(route('fiscal-years.store'), { onSuccess: () 
             </div>
 
             <div class="mt-6 grid gap-6 xl:grid-cols-2">
-                <div class="kartu p-5">
+                <div v-if="units.length > 1" class="kartu p-5">
+                    <h3 class="judul-kartu">Serapan per {{ terms.work_unit?.toLowerCase() }}</h3>
+                    <p class="mb-3 text-xs text-slate-500">Batang hijau = realisasi, batang pudar = anggaran. Klik untuk melihat satu unit.</p>
+                    <UnitBars :units="units" @select="selectUnit" />
+                </div>
+                <div v-else class="kartu p-5">
                     <h3 class="judul-kartu">Kemajuan per {{ terms.project?.toLowerCase() }}</h3>
-                    <p class="mb-3 text-xs text-slate-500">Batang berwarna = aktual, batang pudar = rencana per hari ini</p>
-                    <ProgressBars :projects="projects" />
+                    <p class="mb-3 text-xs text-slate-500">
+                        Batang berwarna = aktual, batang pudar = rencana per hari ini<template v-if="projects.length > progressProjects.length">; {{ progressProjects.length }} dengan selisih terbesar dari {{ projects.length }}</template>
+                    </p>
+                    <ProgressBars :projects="progressProjects" />
                 </div>
                 <div class="kartu p-5">
                     <h3 class="judul-kartu">Penyerapan anggaran kumulatif</h3>
                     <p class="mb-3 text-xs text-slate-500">Rencana disebar sepanjang jadwal tiap {{ terms.project?.toLowerCase() }}; realisasi dari pembayaran tercatat</p>
-                    <BudgetLine :monthly="portfolio.monthly" :ceiling="totals.ceiling" :ceiling-label="terms.budget_ceiling" />
+                    <BudgetLine :monthly="portfolio.monthly" :ceiling="unit ? 0 : totals.ceiling" :ceiling-label="terms.budget_ceiling" />
                 </div>
+            </div>
+
+            <section v-if="goals.length" class="kartu mt-6 p-5">
+                <h3 class="judul-kartu">{{ terms.goal }} &amp; {{ terms.indicator }} {{ fiscalYear.code }}</h3>
+                <p class="mb-4 text-xs text-slate-500">
+                    Kemajuan dan serapan {{ terms.project?.toLowerCase() }} pendukung tiap sasaran. Capaian dinilai menurut KMA 94/2021: &gt;100 sangat baik, 80–100 baik, 50–79,99 cukup, &lt;50 kurang.
+                </p>
+                <GoalPanel :goals="goals" :fiscal-year="fiscalYear" />
+            </section>
+
+            <div v-if="units.length > 1" class="kartu mt-6 p-5">
+                <h3 class="judul-kartu">Kemajuan per {{ terms.project?.toLowerCase() }}</h3>
+                <p class="mb-3 text-xs text-slate-500">
+                    Batang berwarna = aktual, batang pudar = rencana per hari ini<template v-if="projects.length > progressProjects.length">; {{ progressProjects.length }} dengan selisih terbesar dari {{ projects.length }}</template>
+                </p>
+                <ProgressBars :projects="progressProjects" />
             </div>
 
             <div class="kartu mt-6 p-5">
                 <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
                     <div>
                         <h3 class="judul-kartu">Garis waktu {{ terms.portfolio?.toLowerCase() }} {{ fiscalYear.code }}</h3>
-                        <p class="text-xs text-slate-500">{{ tanggal(fiscalYear.start_date) }} – {{ tanggal(fiscalYear.end_date) }}</p>
+                        <p class="text-xs text-slate-500">
+                            {{ tanggal(fiscalYear.start_date) }} – {{ tanggal(fiscalYear.end_date) }}<template v-if="projects.length > ganttProjects.length"> · {{ ganttProjects.length }} {{ terms.project?.toLowerCase() }} dengan anggaran terbesar</template>
+                        </p>
                     </div>
-                    <Link :href="route('projects.index', { ta: fiscalYear.ulid })" class="text-sm font-semibold text-zamrud-700 hover:underline">Lihat semua →</Link>
+                    <Link :href="route('projects.index', { ta: fiscalYear.ulid, unit: unit || undefined })" class="text-sm font-semibold text-zamrud-700 hover:underline">Lihat semua →</Link>
                 </div>
-                <PortfolioGantt :projects="projects" :start="fiscalYear.start_date" :end="fiscalYear.end_date" :today="today" />
+                <PortfolioGantt :projects="ganttProjects" :start="fiscalYear.start_date" :end="fiscalYear.end_date" :today="today" />
             </div>
         </template>
 

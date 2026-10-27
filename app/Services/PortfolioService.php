@@ -4,6 +4,8 @@ namespace App\Services;
 
 use App\Models\Expenditure;
 use App\Models\FiscalYear;
+use App\Models\Goal;
+use App\Models\GoalIndicator;
 use App\Models\Project;
 use App\Models\Task;
 use Carbon\CarbonImmutable;
@@ -14,12 +16,16 @@ use Illuminate\Support\Collection;
  */
 class PortfolioService
 {
-    public function summary(FiscalYear $fy, ?CarbonImmutable $today = null): array
+    /**
+     * @param  string|null  $unit  batasi pada satu unit kerja (kolom kategori proyek)
+     */
+    public function summary(FiscalYear $fy, ?CarbonImmutable $today = null, ?string $unit = null): array
     {
         $today ??= CarbonImmutable::today();
 
         $projects = Project::real()
             ->where('fiscal_year_id', $fy->id)
+            ->when($unit, fn ($q) => $q->where('category', $unit))
             ->with(['leader:id,name', 'tasks' => fn ($q) => $q->select([
                 'id', 'project_id', 'parent_id', 'kind', 'title', 'duration_days', 'start_date', 'finish_date',
                 'percent_complete', 'is_critical', 'status', 'wbs_code',
@@ -56,7 +62,67 @@ class PortfolioService
                 ->map(fn ($label, $key) => ['key' => $key, 'label' => $label, 'count' => $rows->where('health', $key)->count()])
                 ->values(),
             'monthly' => $this->monthly($fy, $projects, $rows, $today),
+            'by_unit' => $this->byUnit($rows),
+            'goals' => $this->goals($fy, $rows),
         ];
+    }
+
+    /**
+     * Anggaran, realisasi, dan kesehatan per unit kerja, dari yang anggarannya terbesar.
+     */
+    private function byUnit(Collection $rows): array
+    {
+        return $rows->groupBy(fn ($r) => $r['category'] ?: 'Tanpa unit')
+            ->map(fn (Collection $g, $unit) => [
+                'unit' => $unit,
+                'count' => $g->count(),
+                'budget' => round($g->sum('budget'), 2),
+                'realized' => round($g->sum('realized'), 2),
+                'absorption' => $g->sum('budget') > 0 ? round($g->sum('realized') / $g->sum('budget') * 100, 1) : 0,
+                'progress' => round($g->avg('progress'), 1),
+                'planned' => round($g->avg('planned'), 1),
+                'kritis' => $g->where('health', 'kritis')->count(),
+                'waspada' => $g->where('health', 'waspada')->count(),
+            ])
+            ->sortByDesc('budget')
+            ->values()
+            ->all();
+    }
+
+    /**
+     * Sasaran program tahun anggaran ini: indikator kinerja dan kegiatan pendukungnya.
+     */
+    private function goals(FiscalYear $fy, Collection $rows): array
+    {
+        $byGoal = $rows->groupBy('goal_id');
+
+        return $fy->goals()->with('indicators')->get()->map(function (Goal $g) use ($byGoal) {
+            $projects = $byGoal->get($g->id, collect());
+
+            return [
+                'ulid' => $g->ulid,
+                'id' => $g->id,
+                'code' => $g->code,
+                'title' => $g->title,
+                'color' => $g->color,
+                'project_count' => $projects->count(),
+                'budget' => round($projects->sum('budget'), 2),
+                'realized' => round($projects->sum('realized'), 2),
+                'progress' => round($projects->avg('progress') ?? 0, 1),
+                'planned' => round($projects->avg('planned') ?? 0, 1),
+                'kritis' => $projects->where('health', 'kritis')->count(),
+                'indicators' => $g->indicators->map(fn (GoalIndicator $i) => [
+                    'name' => $i->name,
+                    'unit' => $i->unit,
+                    'target' => $i->target,
+                    'realization' => $i->realization,
+                    'score' => $i->score,
+                    'category' => GoalIndicator::category($i->score),
+                    'baseline_realization' => $i->baseline_realization,
+                    'baseline_score' => $i->baseline_score,
+                ])->all(),
+            ];
+        })->all();
     }
 
     public function projectRow(Project $p, CarbonImmutable $today, float $realized): array
@@ -84,6 +150,7 @@ class PortfolioService
             'code' => $p->code,
             'name' => $p->name,
             'category' => $p->category,
+            'goal_id' => $p->goal_id,
             'color' => $p->color,
             'status' => $p->status,
             'status_label' => $p->statusLabel(),

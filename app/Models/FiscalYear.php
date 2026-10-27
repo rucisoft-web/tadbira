@@ -39,6 +39,11 @@ class FiscalYear extends Model
         return $this->hasMany(Project::class);
     }
 
+    public function goals(): HasMany
+    {
+        return $this->hasMany(Goal::class)->orderBy('position');
+    }
+
     public function isClosed(): bool
     {
         return $this->status === 'closed';

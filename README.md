@@ -17,6 +17,8 @@ Istilah mengikuti PMBOK edisi ke-4 (SRK/WBS, tahap, tonggak, jalur kritis, peman
 - **Templat proyek**: simpan proyek sebagai templat, lalu buat proyek baru cukup dengan memilih tanggal mulai. Pratinjau menampilkan tanggal selesai, tiap tahap, tonggak, dan peringatan bila melewati tahun anggaran.
 - **Impor POK RKA-K/L** (ekspor SAKTI), **Laporan Ketersediaan Dana Detail** (PDF atau XLS dari SAKTI/OM-SPAN, termasuk realisasi s.d. periode), dan **RAB/RKAP**: setiap RO menjadi satu kegiatan, dan struktur Komponen/Subkomponen bisa langsung dibentuk menjadi SRK. Unggah laporan realisasi tiap bulan untuk memperbarui pagu dan realisasi.
 - **Anggaran dan realisasi** per baris (akun/pos) dengan status komitmen/tagihan/dibayar.
+- **Sasaran program & IKU** per tahun anggaran: setiap kegiatan dikaitkan ke sasaran, dasbor menampilkan target, capaian (kategori KMA 94/2021), serta kemajuan dan serapan kegiatan pendukungnya.
+- **Pantauan per unit kerja**: grafik serapan per fakultas/unit, filter unit dan sasaran, serta daftar kegiatan yang bisa diurutkan menurut ketertinggalan atau serapan.
 - **Riwayat** perubahan per proyek.
 
 ## Teknologi
@@ -53,7 +55,10 @@ npm run build                # atau `npm run dev` saat pengembangan
 php artisan serve
 ```
 
-Buka http://127.0.0.1:8000 dan masuk dengan akun contoh **admin@tadbira.test** / **password**. Data contoh berisi dua organisasi (satu kementerian, satu BUMN) dengan beberapa kegiatan, realisasi anggaran, dan tiga templat. Untuk organisasi sendiri, daftar lewat halaman *Daftar*: pilih sektor organisasi, dan tahun anggaran berjalan dibuat otomatis.
+Buka http://127.0.0.1:8000 dan masuk dengan akun contoh **admin@tadbira.test** / **password**. Data contoh (seluruhnya karangan) berisi tiga organisasi:
+
+- **UIN Sunan Kalijaga Yogyakarta, TA 2026** (dibuka pertama): 99 kegiatan di 18 fakultas/unit, sembilan sasaran program dengan IKU, serta jadwal, kemajuan, anggaran per akun, dan realisasi bulanan. Tiap unit punya akun operator, mis. `fitk@demo.uin-suka.test` / `password`. Datanya ada di `database/data/demo-ptkin-2026.php`.
+- Sebuah direktorat kementerian dan sebuah BUMN dengan beberapa proyek dan tiga templat. Pindah organisasi lewat pemilih di bilah samping. Untuk organisasi sendiri, daftar lewat halaman *Daftar*: pilih sektor organisasi, dan tahun anggaran berjalan dibuat otomatis.
 
 ### Pemasangan di server
 

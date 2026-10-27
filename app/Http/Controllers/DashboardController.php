@@ -18,7 +18,9 @@ class DashboardController extends Controller
         return Inertia::render('Dashboard', [
             'fiscalYears' => $org->fiscalYears()->get(['ulid', 'code', 'year', 'status']),
             'fiscalYear' => $fy ? Arr::only($fy->toArray(), ['ulid', 'code', 'year', 'status', 'start_date', 'end_date', 'ceiling_amount']) : null,
-            'portfolio' => $fy ? $portfolio->summary($fy) : null,
+            'portfolio' => $fy ? $portfolio->summary($fy, null, $request->string('unit')->toString() ?: null) : null,
+            'units' => $fy ? $fy->projects()->where('is_template', false)->whereNotNull('category')->distinct()->orderBy('category')->pluck('category') : [],
+            'unit' => $request->string('unit')->toString() ?: null,
             'today' => now()->toDateString(),
         ]);
     }

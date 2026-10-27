@@ -16,6 +16,7 @@ const props = defineProps({
     budgetLevels: Object,
     activity: Array,
     users: Array,
+    goals: { type: Array, default: () => [] },
 });
 
 const page = usePage();
@@ -65,6 +66,7 @@ const settings = useForm({
     scheduling_direction: props.project.scheduling_direction,
     anchor_date: props.project.scheduling_direction === 'backward' ? props.project.target_finish_date : props.project.start_date,
     status: props.project.status,
+    goal_id: props.project.goal_id,
 });
 const saveSettings = () => settings.patch(route('projects.update', props.project.ulid), { preserveScroll: true });
 
@@ -164,6 +166,16 @@ const kindLabel = { phase: terms.value.phase, work_package: terms.value.work_pac
                 </ul>
             </div>
             <div class="space-y-6">
+                <div v-if="project.goal" class="kartu border-l-4 border-l-emas-400 p-5">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-emas-700">{{ terms.goal }} {{ project.goal.code }}</p>
+                    <h3 class="mt-1 font-semibold text-zamrud-950">{{ project.goal.title }}</h3>
+                    <ul class="mt-3 space-y-2 text-sm">
+                        <li v-for="(i, n) in project.goal.indicators" :key="n" class="flex justify-between gap-3">
+                            <span class="text-slate-600">{{ i.name }}</span>
+                            <span class="shrink-0 font-semibold text-zamrud-900">{{ i.target }}</span>
+                        </li>
+                    </ul>
+                </div>
                 <div class="kartu p-5">
                     <h3 class="judul-kartu mb-3">{{ terms.milestone }}</h3>
                     <ul class="space-y-2 text-sm">
@@ -194,6 +206,13 @@ const kindLabel = { phase: terms.value.phase, work_package: terms.value.work_pac
                         <option value="closed">Selesai</option>
                         <option value="cancelled">Dibatalkan</option>
                     </select>
+                    <div v-if="goals.length">
+                        <label class="label">{{ terms.goal }}</label>
+                        <select v-model="settings.goal_id" class="masukan w-full">
+                            <option :value="null">Belum dikaitkan</option>
+                            <option v-for="g in goals" :key="g.id" :value="g.id">{{ g.code }} · {{ g.title }}</option>
+                        </select>
+                    </div>
                     <button class="tombol w-full justify-center" :disabled="settings.processing">Simpan</button>
                 </form>
                 <form class="kartu space-y-3 p-5" @submit.prevent="saveTemplate">
