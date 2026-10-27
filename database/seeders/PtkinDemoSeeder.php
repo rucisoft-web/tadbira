@@ -26,16 +26,21 @@ use Illuminate\Support\Str;
  */
 class PtkinDemoSeeder extends Seeder
 {
-    private ProjectScheduler $scheduler;
+    /** Berkas data di database/data. */
+    protected string $dataFile = 'demo-ptkin-2026.php';
 
-    private PortfolioService $portfolio;
+    protected array $data = [];
 
-    private CarbonImmutable $asOf;
+    protected ProjectScheduler $scheduler;
 
-    private const PALETTE = ['#10B981', '#D4A72C', '#38BDF8', '#F97316', '#A78BFA', '#14B8A6', '#EC4899', '#84CC16'];
+    protected PortfolioService $portfolio;
+
+    protected CarbonImmutable $asOf;
+
+    protected const PALETTE = ['#10B981', '#D4A72C', '#38BDF8', '#F97316', '#A78BFA', '#14B8A6', '#EC4899', '#84CC16'];
 
     /** Akun belanja per jenis kegiatan: [kode BLU, kode non-BLU, uraian, porsi]. */
-    private const ACCOUNTS = [
+    protected const ACCOUNTS = [
         'acara' => [
             ['525112', '521211', 'Belanja bahan dan konsumsi', 0.30],
             ['525113', '521213', 'Honor narasumber dan panitia', 0.30],
@@ -64,21 +69,23 @@ class PtkinDemoSeeder extends Seeder
     {
         $this->scheduler = app(ProjectScheduler::class);
         $this->portfolio = app(PortfolioService::class);
-        $data = require database_path('data/demo-ptkin-2026.php');
+        $data = $this->data = require database_path('data/'.$this->dataFile);
         $year = $data['fiscal_year']['year'];
         $this->asOf = CarbonImmutable::today()->min(CarbonImmutable::create($year, 12, 31));
 
         $org = Organization::create([
             'name' => $data['organization']['name'],
             'short_name' => $data['organization']['short_name'],
-            'sector' => 'perguruan_tinggi',
+            'sector' => $data['organization']['sector'] ?? 'perguruan_tinggi',
             'code' => $data['organization']['code'],
         ]);
         $admin = User::firstOrCreate(['email' => 'admin@tadbira.test'], [
             'name' => 'Admin Tadbira', 'password' => Hash::make('password'), 'email_verified_at' => now(),
         ]);
         $org->users()->attach($admin->id, ['role' => 'admin']);
-        $admin->update(['current_organization_id' => $org->id]);
+        if ($data['organization']['make_current'] ?? true) {
+            $admin->update(['current_organization_id' => $org->id]);
+        }
 
         $fy = $org->fiscalYears()->create([
             'year' => $year, 'code' => "TA {$year}", 'start_date' => "{$year}-01-01", 'end_date' => "{$year}-12-31",
@@ -88,31 +95,37 @@ class PtkinDemoSeeder extends Seeder
         $goals = $this->goals($org, $fy, $data);
 
         $n = 0;
-        foreach ($data['units'] as $unit => [$unitName, $activities]) {
+        foreach ($data['units'] as $unit => $unitData) {
+            // [nama unit, kegiatan, awalan kode?]
+            [$unitName, $activities] = $unitData;
+            $prefix = $unitData[2] ?? strtoupper(Str::before(Str::slug($unit), '-'));
             $operator = User::firstOrCreate(
-                ['email' => Str::slug($unit).'@'.$data['organization']['email_domain']],
+                ['email' => Str::lower($prefix).'@'.$data['organization']['email_domain']],
                 ['name' => "Operator {$unit}", 'password' => Hash::make('password'), 'email_verified_at' => now()],
             );
             $org->users()->attach($operator->id, ['role' => 'anggota']);
 
-            foreach ($activities as $i => [$name, $kind, $goalCode, $millions, $source]) {
+            foreach ($activities as $i => $activity) {
+                // [nama, jenis, kode sasaran, anggaran, sumber dana, jadwal [mulai, selesai]?, kode?]
+                [$name, $kind, $goalCode, $millions, $source] = $activity;
                 $this->kegiatan($org, $fy, [
-                    'code' => sprintf('%s-%02d', strtoupper(Str::before(Str::slug($unit), '-')), $i + 1),
+                    'code' => $activity[6] ?? sprintf('%s-%02d', $prefix, $i + 1),
                     'name' => $name,
                     'unit' => $unit,
                     'unit_name' => $unitName,
                     'kind' => $kind,
                     'goal_id' => $goals[$goalCode] ?? null,
-                    'budget' => $millions * 1_000_000,
+                    'budget' => round($millions * ($data['fiscal_year']['multiplier'] ?? 1_000_000)),
                     'source' => $source,
-                    'color' => self::PALETTE[$n++ % count(self::PALETTE)],
+                    'window' => $activity[5] ?? null,
+                    'color' => static::PALETTE[$n++ % count(static::PALETTE)],
                 ], $operator->id, $admin->id);
             }
         }
     }
 
     /** @return array<string, int> kode sasaran → id */
-    private function goals(Organization $org, FiscalYear $fy, array $data): array
+    protected function goals(Organization $org, FiscalYear $fy, array $data): array
     {
         $ids = [];
         foreach ($data['goals'] as $pos => [$code, $title, $color, $indicators]) {
@@ -135,10 +148,10 @@ class PtkinDemoSeeder extends Seeder
         return $ids;
     }
 
-    private function kegiatan(Organization $org, FiscalYear $fy, array $spec, int $leaderId, int $adminId): void
+    protected function kegiatan(Organization $org, FiscalYear $fy, array $spec, int $leaderId, int $adminId): void
     {
         $rand = $this->random($spec['code'].$spec['name']);
-        [$start, $plan] = $this->plan($spec, $fy, $rand);
+        [$start, $plan] = $spec['window'] ? $this->fitToWindow($spec, $fy, $rand) : $this->plan($spec, $fy, $rand);
 
         $project = Project::create([
             'organization_id' => $org->id,
@@ -148,7 +161,7 @@ class PtkinDemoSeeder extends Seeder
             'created_by' => $adminId,
             'code' => $spec['code'],
             'name' => $spec['name'],
-            'description' => "Kegiatan {$spec['unit_name']} tahun anggaran {$fy->year}.",
+            'description' => sprintf($this->data['description'] ?? 'Kegiatan %s tahun anggaran %d.', $spec['unit_name'], $fy->year),
             'category' => $spec['unit'],
             'color' => $spec['color'],
             'status' => 'planning',
@@ -176,7 +189,7 @@ class PtkinDemoSeeder extends Seeder
 
         // Kecepatan: sebagian besar sesuai jadwal, sebagian tertinggal.
         $roll = $rand();
-        $pace = match (true) {
+        $pace = in_array($spec['name'], $this->data['on_track'] ?? [], true) ? 1.0 : match (true) {
             $roll < 0.62 => 0.96 + $rand() * 0.08,
             $roll < 0.84 => 0.82 + $rand() * 0.12,
             default => 0.45 + $rand() * 0.33,
@@ -210,7 +223,7 @@ class PtkinDemoSeeder extends Seeder
     /**
      * Jadwal karangan menurut jenis kegiatan: [tanggal mulai, [judul, lama hari kerja, pendahulu]].
      */
-    private function plan(array $spec, FiscalYear $fy, callable $rand): array
+    protected function plan(array $spec, FiscalYear $fy, callable $rand): array
     {
         $y = $fy->year;
         $day = fn (int $fromMonth, int $toMonth) => CarbonImmutable::create($y, $fromMonth, 1)
@@ -266,8 +279,40 @@ class PtkinDemoSeeder extends Seeder
         ]];
     }
 
+    /**
+     * Jadwal yang sudah diketahui (mis. dari dokumen program kerja): rencana menurut jenis
+     * kegiatan diregangkan atau dipadatkan agar pas dengan rentang tanggalnya. Untuk acara
+     * singkat, rentang tersebut adalah hari pelaksanaan; persiapan dimulai tiga minggu sebelumnya.
+     */
+    protected function fitToWindow(array $spec, FiscalYear $fy, callable $rand): array
+    {
+        [$from, $to] = array_map(fn ($d) => CarbonImmutable::parse($d), $spec['window']);
+        $days = $this->scheduler->calendarFor($fy->organization_id)->workingDaysBetween($from, $to) + 1;
+
+        if ($spec['kind'] === 'acara') {
+            return $days <= 5
+                ? [$from->subWeekdays(15), [
+                    ['Persiapan dan koordinasi panitia', 15, null],
+                    ['Pelaksanaan kegiatan', $days, 0],
+                    ['Kegiatan terlaksana', 0, 1],
+                    ['Laporan dan SPJ', 7, 2],
+                ]]
+                : [$from, [
+                    ['Persiapan dan koordinasi panitia', max(1, $days - 3), null],
+                    ['Pelaksanaan kegiatan', 2, 0],
+                    ['Kegiatan terlaksana', 0, 1],
+                    ['Laporan dan SPJ', 5, 2],
+                ]];
+        }
+
+        [, $plan] = $this->plan($spec, $fy, $rand);
+        $total = array_sum(array_column($plan, 1)) ?: 1;
+
+        return [$from, array_map(fn ($t) => [$t[0], $t[1] === 0 ? 0 : max(1, (int) round($t[1] * $days / $total)), $t[2]], $plan)];
+    }
+
     /** Rincian anggaran per akun dan realisasi bulanan sebanding dengan kemajuan. */
-    private function budget(Project $project, FiscalYear $fy, array $spec, callable $rand): void
+    protected function budget(Project $project, FiscalYear $fy, array $spec, callable $rand): void
     {
         $blu = $spec['source'] === 'BLU';
         $root = BudgetLine::create([
@@ -287,7 +332,7 @@ class PtkinDemoSeeder extends Seeder
         $end = CarbonImmutable::parse($project->computed_finish_date)->min($this->asOf);
         $months = $end->lt($start) ? 0 : (int) $start->startOfMonth()->diffInMonths($end->startOfMonth()) + 1;
 
-        foreach (self::ACCOUNTS[$spec['kind']] as $pos => [$bluCode, $code, $desc, $share]) {
+        foreach (static::ACCOUNTS[$spec['kind']] as $pos => [$bluCode, $code, $desc, $share]) {
             if ($spec['kind'] === 'fisik' && $share > 0.5 && Str::contains(Str::lower($spec['name']), ['peralatan', 'perlengkapan', 'jaringan', 'pengadaan', 'galeri'])) {
                 [$bluCode, $code, $desc] = ['537111', '532111', 'Belanja modal peralatan dan mesin'];
             }
@@ -304,14 +349,14 @@ class PtkinDemoSeeder extends Seeder
                     'status' => 'paid',
                     'amount' => round($total / $months),
                     'transaction_date' => $date,
-                    'reference' => sprintf('SP2D-%s-%05d', $date->format('ym'), $line->id * 7 + $m),
+                    'reference' => sprintf(($this->data['reference_prefix'] ?? 'SP2D').'-%s-%05d', $date->format('ym'), $line->id * 7 + $m),
                 ]);
             }
         }
     }
 
     /** Pembangkit acak deterministik per kegiatan. */
-    private function random(string $seed): callable
+    protected function random(string $seed): callable
     {
         $state = crc32($seed) ?: 1;
 

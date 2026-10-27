@@ -140,6 +140,9 @@ return [
             'budget_ceiling' => 'Anggaran',
             'budget_document' => 'RAB',
             'budget_import' => 'Impor RAB (XLS)',
+            'goal' => 'Sasaran strategis',
+            'indicator' => 'KPI',
+            'work_unit' => 'Unit bisnis / aset',
         ],
         'nirlaba' => [
             'unit' => 'Divisi',

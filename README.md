@@ -55,10 +55,28 @@ npm run build                # atau `npm run dev` saat pengembangan
 php artisan serve
 ```
 
-Buka http://127.0.0.1:8000 dan masuk dengan akun contoh **admin@tadbira.test** / **password**. Data contoh (seluruhnya karangan) berisi tiga organisasi:
+Buka http://127.0.0.1:8000 dan masuk dengan akun contoh **admin@tadbira.test** / **password**. Data contoh berisi lima organisasi:
 
-- **UIN Sunan Kalijaga Yogyakarta, TA 2026** (dibuka pertama): 99 kegiatan di 18 fakultas/unit, sembilan sasaran program dengan IKU, serta jadwal, kemajuan, anggaran per akun, dan realisasi bulanan. Tiap unit punya akun operator, mis. `fitk@demo.uin-suka.test` / `password`. Datanya ada di `database/data/demo-ptkin-2026.php`.
-- Sebuah direktorat kementerian dan sebuah BUMN dengan beberapa proyek dan tiga templat. Pindah organisasi lewat pemilih di bilah samping. Untuk organisasi sendiri, daftar lewat halaman *Daftar*: pilih sektor organisasi, dan tahun anggaran berjalan dibuat otomatis.
+- **UIN Sunan Kalijaga Yogyakarta, TA 2026** (dibuka pertama): 99 kegiatan di 18 fakultas/unit dan sembilan sasaran program dengan IKU. Seluruhnya karangan (`database/data/demo-ptkin-2026.php`).
+- **PT Medco Energi Internasional Tbk, TA 2026**: 66 proyek migas, ketenagalistrikan, pertambangan, korporat, dan pengembangan masyarakat di 12 unit bisnis/aset, dengan tujuh sasaran strategis dan KPI. Aset dan target diambil dari Laporan Tahunan 2025; anggaran, jadwal, dan kemajuan karangan (`database/data/demo-medco-2026.php`).
+- **Universitas Negeri Jakarta, TA 2026**: 13 program kerja dari dokumen Program Kerja UNJ 2026 (anggaran dan jadwal sesuai dokumen) ditambah 49 kegiatan fakultas/unit karangan (`database/data/demo-unj-2026.php`).
+- Sebuah direktorat kementerian dan sebuah BUMN dengan beberapa proyek dan tiga templat.
+
+Tiap unit punya akun operator, mis. `fitk@demo.uin-suka.test`, `corridor@demo.medco.test`, `lppm@demo.unj.test` / `password`. Pindah organisasi lewat pemilih di bilah samping. Untuk organisasi sendiri, daftar lewat halaman *Daftar*: pilih sektor organisasi, dan tahun anggaran berjalan dibuat otomatis.
+
+### Mode tamu
+
+Set `TADBIRA_GUEST_LOGIN=true` di `.env` untuk menampilkan kartu data demo (UIN Sunan Kalijaga, MedcoEnergi, UNJ) di halaman depan dan halaman masuk. Tamu masuk tanpa kata sandi lewat `/masuk-tamu?organisasi={ulid}` dan hanya bisa melihat; semua perubahan data ditolak. Akun tamu (`tamu@tadbira.test`) dibuat oleh `php artisan db:seed`.
+
+### Lupa kata sandi
+
+Halaman *Lupa kata sandi?* mengirim tautan atur ulang lewat surel (isi `MAIL_*` di `.env` dengan SMTP). Tanpa surel, atur ulang lewat terminal:
+
+```bash
+php artisan tadbira:pengguna                          # daftar akun
+php artisan tadbira:reset-sandi admin@tadbira.test    # kata sandi acak
+php artisan tadbira:reset-sandi admin@tadbira.test RahasiaBaru123
+```
 
 ### Pemasangan di server
 

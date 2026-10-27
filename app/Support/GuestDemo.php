@@ -19,7 +19,7 @@ class GuestDemo
             return [];
         }
 
-        return $guest->organizations()->get()->map(function ($org) {
+        return $guest->organizations()->orderBy('organizations.id')->get()->map(function ($org) {
             $fy = $org->fiscalYears()->where('year', now()->year)->first() ?? $org->fiscalYears()->first();
             $projects = $fy ? $org->projects()->where('fiscal_year_id', $fy->id) : null;
 
@@ -33,6 +33,6 @@ class GuestDemo
                 'budget' => $projects ? (float) $projects->sum('budget_amount') : 0,
                 'project_term' => $org->terminology()->get('project'),
             ];
-        })->sortByDesc('projects')->values()->all();
+        })->all();
     }
 }
