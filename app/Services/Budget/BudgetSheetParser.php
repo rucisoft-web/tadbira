@@ -8,11 +8,14 @@ use RuntimeException;
 /**
  * Membaca lembar rencana anggaran (XLS/XLSX/CSV) menjadi pohon baris anggaran.
  *
- * Dua format didukung:
- *  1. POK RKA-K/L (ekspor SAKTI): tingkat dikenali dari pola kode
- *     Program 025.04.DL · Kegiatan 4471 · KRO QDB / 4471.QDB · RO 001 / 4471.QDB.001
- *     Komponen 051 · Subkomponen A · Akun 521211 · Detail (tanpa kode, diawali ">" atau "-").
- *  2. Templat RAB/RKAP Tadbira: kolom "Level" berisi nama tingkat (kelompok, pos, detail, ...).
+ * Format yang didukung:
+ *  1. POK RKA-K/L (ekspor SAKTI): tingkat dikenali dari pola kode, baik kode lama
+ *     (Program 025.04.DL · Kegiatan 4471 · KRO QDB / 4471.QDB · RO 001 / 4471.QDB.001)
+ *     maupun kode baru (Program DK · Kegiatan DK.2132 · KRO BEA · RO BEA.001),
+ *     lalu Komponen 051 · Subkomponen A · Akun 521211 · Detail (tanpa kode, diawali ">" atau "-").
+ *  2. Laporan Ketersediaan Dana / realisasi (SAKTI, OM-SPAN): kode menyatu dengan
+ *     uraian, kolom Pagu Revisi dan Realisasi s.d. Periode. Bisa XLS atau PDF.
+ *  3. Templat RAB/RKAP Tadbira: kolom "Level" berisi nama tingkat (kelompok, pos, detail, ...).
  *
  * Hasil: daftar node berurutan, masing-masing dengan 'key' dan 'parent_key'.
  */
@@ -25,11 +28,28 @@ class BudgetSheetParser
 
     public const RAB_RANK = ['kelompok' => 1, 'pos' => 2, 'detail' => 3];
 
+    /** Pola kode anggaran K/L yang dapat muncul di depan uraian. */
+    public const CODE_PATTERN = '(?:\d{3}\.\d{2}\.[A-Z]{2}|[A-Z]{2}\.\d{4}|(?:[A-Z]{2}\.)?(?:\d{4}\.)?[A-Z]{3}(?:\.\d{3})?|[A-Z]{2}|\d{6}|\d{4}|\d{3}|[A-Z])';
+
+    private const MONTHS = [
+        'januari' => 1, 'februari' => 2, 'maret' => 3, 'april' => 4, 'mei' => 5, 'juni' => 6,
+        'juli' => 7, 'agustus' => 8, 'september' => 9, 'oktober' => 10, 'november' => 11, 'desember' => 12,
+    ];
+
     /**
-     * @return array{format: 'pok'|'rab', rows: list<array<string, mixed>>}
+     * @return array{format: 'pok'|'rab', source: string, meta: array, rows: list<array<string, mixed>>}
      */
     public function parseFile(string $path): array
     {
+        $handle = fopen($path, 'rb');
+        $magic = $handle ? fread($handle, 5) : '';
+        if ($handle) {
+            fclose($handle);
+        }
+        if ($magic === '%PDF-') {
+            return $this->parseRows((new PdfReportReader)->toRows($path));
+        }
+
         $sheet = IOFactory::load($path)->getActiveSheet();
 
         return $this->parseRows($sheet->toArray(null, true, false, false));
@@ -43,6 +63,9 @@ class BudgetSheetParser
     {
         [$headerIndex, $cols] = $this->detectHeader($cells);
         $format = isset($cols['level']) ? 'rab' : 'pok';
+        $meta = $this->meta(array_slice($cells, 0, $headerIndex + 1));
+        // Tanpa kolom KODE, kode ditulis menyatu di depan uraian (laporan SAKTI/OM-SPAN).
+        $embedded = ! isset($cols['code']);
 
         $rows = [];
         $stack = []; // rank => key
@@ -50,8 +73,12 @@ class BudgetSheetParser
         $key = 0;
 
         foreach (array_slice($cells, $headerIndex + 1) as $line) {
-            $code = $this->text($line[$cols['code']] ?? null);
-            $desc = $this->text($line[$cols['description']] ?? null);
+            if ($embedded) {
+                [$code, $desc] = $this->splitCode($line, $cols);
+            } else {
+                $code = $this->text($line[$cols['code']] ?? null);
+                $desc = $this->text($line[$cols['description']] ?? null);
+            }
             if ($code === '' && $desc === '') {
                 continue;
             }
@@ -73,6 +100,7 @@ class BudgetSheetParser
                 'unit_price' => $this->number($line[$cols['unit_price'] ?? -1] ?? null),
                 'amount' => $this->number($line[$cols['amount'] ?? -1] ?? null),
                 'funding_source' => $this->text($line[$cols['funding_source'] ?? -1] ?? null) ?: null,
+                'realized' => isset($cols['realized']) ? $this->number($line[$cols['realized']] ?? null) : null,
             ];
 
             if ($format === 'rab') {
@@ -110,7 +138,67 @@ class BudgetSheetParser
             throw new RuntimeException('Tidak ada baris anggaran yang dapat dibaca. Periksa apakah kolom KODE dan URAIAN tersedia.');
         }
 
-        return ['format' => $format, 'rows' => $this->fillAmounts($rows)];
+        return [
+            'format' => $format,
+            'source' => isset($cols['realized']) ? 'realisasi' : $format,
+            'meta' => $meta,
+            'rows' => $this->fillAmounts($rows),
+        ];
+    }
+
+    /**
+     * Pisahkan kode dari uraian, mis. "BEA.001 Tunjangan Profesi Dosen Non ASN".
+     * Ekspor XLS kadang menaruh kode di sel terpisah di kiri uraian, jadi semua
+     * teks di kiri kolom angka pertama digabung lebih dulu.
+     *
+     * @return array{0: string, 1: string}
+     */
+    private function splitCode(array $line, array $cols): array
+    {
+        $firstNumber = min(array_diff_key($cols, ['description' => 0]) ?: [PHP_INT_MAX]);
+        $parts = [];
+        foreach ($line as $c => $value) {
+            if ($c >= $cols['description'] && $c < $firstNumber && $this->text($value) !== '') {
+                $parts[] = $this->text($value);
+            }
+        }
+        // Kode bisa berada di kolom sebelum kolom "Uraian" bila judulnya digabung.
+        for ($c = $cols['description'] - 1; $c >= 0; $c--) {
+            if ($this->text($line[$c] ?? null) !== '') {
+                array_unshift($parts, $this->text($line[$c]));
+            }
+        }
+        $text = implode(' ', $parts);
+
+        if (preg_match('/^('.self::CODE_PATTERN.')\s+(.+)$/u', $text, $m) === 1) {
+            return [$m[1], $m[2]];
+        }
+
+        return ['', $text];
+    }
+
+    /**
+     * Keterangan di atas tabel: tahun anggaran, periode laporan, dan satuan kerja.
+     */
+    private function meta(array $lines): array
+    {
+        $meta = ['year' => null, 'period_end' => null, 'period_label' => null, 'unit' => null];
+        foreach ($lines as $line) {
+            $text = $this->text(implode(' ', array_map(fn ($v) => $this->text($v), $line)));
+            if ($meta['year'] === null && preg_match('/\bTA\.?\s*(\d{4})\b/i', $text, $m) === 1) {
+                $meta['year'] = (int) $m[1];
+            }
+            if ($meta['period_end'] === null && preg_match('/PERIODE\s+([A-Za-z]+)\s+(\d{4})/i', $text, $m) === 1
+                && isset(self::MONTHS[strtolower($m[1])])) {
+                $meta['period_end'] = date('Y-m-t', mktime(0, 0, 0, self::MONTHS[strtolower($m[1])], 1, (int) $m[2]));
+                $meta['period_label'] = ucfirst(strtolower($m[1])).' '.$m[2];
+            }
+            if ($meta['unit'] === null && preg_match('/SATUAN\s+KERJA\s*:?\s*(\d{6})?\s*(.+?)(\s+HAL\b.*)?$/i', $text, $m) === 1) {
+                $meta['unit'] = trim($m[2]);
+            }
+        }
+
+        return $meta;
     }
 
     /**
@@ -134,6 +222,7 @@ class BudgetSheetParser
                     ! isset($cols['unit_price']) && preg_match('/HARGA/', $v) === 1 => $cols['unit_price'] = $c,
                     ! isset($cols['volume']) && preg_match('/^VOL/', $v) === 1 => $cols['volume'] = $c,
                     ! isset($cols['unit']) && preg_match('/^SAT/', $v) === 1 => $cols['unit'] = $c,
+                    ! isset($cols['realized']) && preg_match('/^S\.?\s*D\.?\s*PERIODE|^S\/D\b|^REALISASI\s+S/', $v) === 1 => $cols['realized'] = $c,
                     ! isset($cols['amount']) && preg_match('/JUMLAH|BIAYA|PAGU|TOTAL/', $v) === 1 => $cols['amount'] = $c,
                     ! isset($cols['funding_source']) && preg_match('/^(SD|SUMBER|CP)/', $v) === 1 => $cols['funding_source'] = $c,
                     default => null,
@@ -142,9 +231,22 @@ class BudgetSheetParser
             if (isset($cols['code'], $cols['description'])) {
                 return [$i, $cols];
             }
+            if (isset($cols['description'], $cols['amount'])) {
+                // Judul dua tingkat: "Realisasi" di atas "Periode Lalu | Periode Ini | s.d. Periode".
+                $next = $cells[$i + 1] ?? [];
+                foreach ($next as $c => $value) {
+                    $v = strtoupper($this->text($value));
+                    if (! isset($cols['realized']) && preg_match('/^S\.?\s*D\.?\s*PERIODE|^S\/D\b/', $v) === 1) {
+                        $cols['realized'] = $c;
+                    }
+                }
+                $isSubHeader = $next !== [] && array_filter($next, fn ($v) => is_numeric($v) || preg_match('/\d{3}[.,]\d{3}/', (string) $v) === 1) === [];
+
+                return [$isSubHeader ? $i + 1 : $i, $cols];
+            }
         }
 
-        throw new RuntimeException('Judul kolom tidak ditemukan. Lembar harus memiliki kolom KODE dan URAIAN.');
+        throw new RuntimeException('Judul kolom tidak ditemukan. Lembar harus memiliki kolom KODE dan URAIAN, atau URAIAN dan PAGU.');
     }
 
     /**
@@ -169,11 +271,15 @@ class BudgetSheetParser
             return null;
         }
 
+        $underKomponen = in_array($lastStructural, ['komponen', 'subkomponen', 'akun'], true);
+
         return match (true) {
             preg_match('/^\d{3}\.\d{2}\.[A-Z]{2}$/', $code) === 1 => 'program',
-            preg_match('/^\d{4}$/', $code) === 1 => 'kegiatan',
-            preg_match('/^(\d{4}\.)?[A-Z]{3}$/', $code) === 1 => 'kro',
-            preg_match('/^\d{4}\.[A-Z]{3}\.\d{3}$/', $code) === 1 => 'ro',
+            // Kode program baru dua huruf (mis. DK); di bawah komponen, dua huruf adalah subkomponen.
+            preg_match('/^[A-Z]{2}$/', $code) === 1 => $underKomponen ? 'subkomponen' : 'program',
+            preg_match('/^([A-Z]{2}\.)?\d{4}$/', $code) === 1 => 'kegiatan',
+            preg_match('/^([A-Z]{2}\.)?(\d{4}\.)?[A-Z]{3}$/', $code) === 1 => 'kro',
+            preg_match('/^([A-Z]{2}\.)?(\d{4}\.)?[A-Z]{3}\.\d{3}$/', $code) === 1 => 'ro',
             preg_match('/^\d{6}$/', $code) === 1 => 'akun',
             // Kode tiga angka: RO bila tepat di bawah KRO atau memuat target volume + satuan
             // (mis. "2 Prodi"); selain itu Komponen.
@@ -239,8 +345,11 @@ class BudgetSheetParser
         if ($s === '' || $s === '-') {
             return null;
         }
-        // Format Indonesia: titik pemisah ribuan, koma desimal.
-        if (str_contains($s, ',') || substr_count($s, '.') > 1 || preg_match('/\.\d{3}$/', $s) === 1) {
+        if (preg_match('/^-?\d{1,3}(,\d{3})+(\.\d+)?$/', $s) === 1) {
+            // Format Inggris (laporan SAKTI/OM-SPAN): koma pemisah ribuan.
+            $s = str_replace(',', '', $s);
+        } elseif (str_contains($s, ',') || substr_count($s, '.') > 1 || preg_match('/\.\d{3}$/', $s) === 1) {
+            // Format Indonesia: titik pemisah ribuan, koma desimal.
             $s = str_replace(['.', ','], ['', '.'], $s);
         }
 

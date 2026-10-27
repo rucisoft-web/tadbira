@@ -118,4 +118,45 @@ class TadbiraFlowTest extends TestCase
 
         $this->actingAs($stranger)->get(route('projects.show', $project))->assertNotFound();
     }
+
+    public function test_monthly_realization_report_updates_existing_projects(): void
+    {
+        $this->fy->update(['year' => 2026, 'code' => 'TA 2026', 'start_date' => '2026-01-01', 'end_date' => '2026-12-31']);
+        $importer = app(\App\Services\Budget\BudgetImporter::class);
+        $parser = new \App\Services\Budget\BudgetSheetParser;
+
+        $june = $parser->parseRows(\Tests\Unit\BudgetSheetParserTest::realizationReport('Juni 2026', '4,000,000,000'));
+        $first = $importer->importAsProjects($this->fy, $june, $this->user->id);
+        $this->assertCount(2, $first['created']);
+        $project = Project::where('code', '2132.BEA.001')->firstOrFail();
+        $this->assertEquals(4000000000, $project->budgetLines()->withSum('expenditures', 'amount')->get()->sum('expenditures_sum_amount'));
+
+        // Laporan Juli memperbarui proyek yang sama; realisasi tercatat sebagai selisih bulan Juli.
+        $july = $parser->parseRows(\Tests\Unit\BudgetSheetParserTest::realizationReport('Juli 2026', '5,500,000,000'));
+        $second = $importer->importAsProjects($this->fy, $july, $this->user->id);
+        $this->assertCount(0, $second['created']);
+        $this->assertCount(2, $second['updated']);
+        $this->assertSame(2, Project::real()->where('fiscal_year_id', $this->fy->id)->count());
+
+        $spent = \App\Models\Expenditure::whereIn('budget_line_id', $project->budgetLines()->pluck('id'))->orderBy('transaction_date')->get();
+        $this->assertEquals([4000000000, 1500000000], $spent->pluck('amount')->all());
+        $this->assertSame(['2026-06-30', '2026-07-31'], $spent->map(fn ($e) => $e->transaction_date->toDateString())->all());
+
+        // Mengunggah ulang Juli tidak menggandakan realisasi.
+        $importer->importAsProjects($this->fy, $july, $this->user->id);
+        $this->assertEquals(5500000000, \App\Models\Expenditure::whereIn('budget_line_id', $project->budgetLines()->pluck('id'))->sum('amount'));
+    }
+
+    public function test_report_for_another_fiscal_year_is_rejected(): void
+    {
+        $rows = \Tests\Unit\BudgetSheetParserTest::realizationReport();
+        $path = tempnam(sys_get_temp_dir(), 'lkd').'.xlsx';
+        BudgetTemplate::write($rows, $path, 'LKD');
+
+        $this->actingAs($this->user)->post(route('budget.import.store'), [
+            'file' => new UploadedFile($path, 'lkd.xlsx', null, null, true),
+            'mode' => 'projects',
+            'fiscal_year' => $this->fy->ulid, // TA 2027
+        ])->assertSessionHasErrors('fiscal_year');
+    }
 }

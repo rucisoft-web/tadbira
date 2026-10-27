@@ -35,10 +35,10 @@ const submit = () => form.post(route('budget.import.store'), { forceFormData: tr
         <div class="grid gap-6 xl:grid-cols-5">
             <form class="kartu space-y-5 p-6 xl:col-span-3" @submit.prevent="submit">
                 <div>
-                    <label class="label">Berkas XLS / XLSX</label>
+                    <label class="label">Berkas XLS / XLSX / PDF</label>
                     <input
                         type="file"
-                        accept=".xls,.xlsx,.csv,.ods"
+                        accept=".xls,.xlsx,.csv,.ods,.pdf"
                         class="block w-full text-sm text-slate-600 file:mr-4 file:rounded-lg file:border-0 file:bg-zamrud-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-zamrud-800 hover:file:bg-zamrud-100"
                         @input="form.file = $event.target.files[0]"
                     >
@@ -95,15 +95,26 @@ const submit = () => form.post(route('budget.import.store'), { forceFormData: tr
             </form>
 
             <aside class="space-y-4 xl:col-span-2">
+                <div v-if="isGovernment" class="kartu border-l-4 border-l-emas-400 p-5">
+                    <h3 class="judul-kartu">Laporan realisasi SAKTI / OM-SPAN</h3>
+                    <p class="mt-1 text-sm text-slate-600">
+                        Unggah <span class="font-semibold">Laporan Ketersediaan Dana Detail</span> (PDF atau XLS) apa adanya.
+                        Pagu Revisi menjadi anggaran, dan <span class="font-semibold">Realisasi s.d. Periode</span> langsung tercatat.
+                    </p>
+                    <p class="mt-2 text-sm text-slate-600">
+                        Unggah laporan bulan berikutnya ke tahun anggaran yang sama untuk memperbarui pagu dan realisasi.
+                        Proyek yang kodenya sama (mis. <span class="font-mono">2132.BEA.001</span>) diperbarui, bukan dibuat ulang.
+                    </p>
+                </div>
                 <div class="kartu p-5">
                     <h3 class="judul-kartu">Format POK RKA-K/L</h3>
                     <p class="mt-1 text-sm text-slate-600">Untuk kementerian, lembaga, dan badan. Gunakan ekspor POK dari SAKTI apa adanya. Tingkat dikenali dari kodenya:</p>
                     <table class="mt-3 w-full text-xs">
                         <tbody class="divide-y divide-gading-100">
-                            <tr><td class="py-1.5 font-semibold">Program</td><td class="font-mono">025.04.DL</td></tr>
-                            <tr><td class="py-1.5 font-semibold">Kegiatan</td><td class="font-mono">4471</td></tr>
-                            <tr><td class="py-1.5 font-semibold">KRO</td><td class="font-mono">QDB atau 4471.QDB</td></tr>
-                            <tr><td class="py-1.5 font-semibold">RO</td><td class="font-mono">001 (dengan volume) atau 4471.QDB.001</td></tr>
+                            <tr><td class="py-1.5 font-semibold">Program</td><td class="font-mono">DK atau 025.04.DL</td></tr>
+                            <tr><td class="py-1.5 font-semibold">Kegiatan</td><td class="font-mono">DK.2132 atau 4471</td></tr>
+                            <tr><td class="py-1.5 font-semibold">KRO</td><td class="font-mono">BEA, QDB, atau 4471.QDB</td></tr>
+                            <tr><td class="py-1.5 font-semibold">RO</td><td class="font-mono">BEA.001, 4471.QDB.001, atau 001</td></tr>
                             <tr><td class="py-1.5 font-semibold">Komponen</td><td class="font-mono">051</td></tr>
                             <tr><td class="py-1.5 font-semibold">Subkomponen</td><td class="font-mono">A</td></tr>
                             <tr><td class="py-1.5 font-semibold">Akun</td><td class="font-mono">521211</td></tr>

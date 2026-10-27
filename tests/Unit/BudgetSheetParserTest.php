@@ -72,4 +72,49 @@ class BudgetSheetParserTest extends TestCase
 
         $this->assertCount(2, array_filter($parsed['rows'], fn ($r) => $r['level'] === 'ro'));
     }
+
+    /** Baris seperti hasil PdfReportReader dari Laporan Ketersediaan Dana Detail. */
+    public static function realizationReport(string $period = 'Juni 2026', string $realized = '4,173,902,100'): array
+    {
+        return [
+            ['LAPORAN KETERSEDIAAN DANA DETAIL TA 2026'],
+            ["Periode {$period}"],
+            ['Satuan Kerja : 423755 UNIVERSITAS CONTOH Hal 1 dari 1'],
+            ['Uraian', 'Pagu Revisi', 'Lock Pagu', 'Periode Lalu', 'Periode Ini', 's.d. Periode', '%', 'Sisa Anggaran'],
+            ['JUMLAH SELURUHNYA', '11,387,636,000', '0', null, null, '4,211,977,100', '36.99 %', null],
+            ['DK Program Pendidikan Tinggi', '11,387,636,000', '0', null, null, '4,211,977,100', '36.99 %', null],
+            ['DK.2132 Peningkatan Akses, Mutu, Relevansi, dan Daya Saing Pendidikan Tinggi Keagamaan Islam', '11,387,636,000', '0', null, null, '4,211,977,100', '36.99 %', null],
+            ['BEA Bantuan Masyarakat', '11,387,636,000', '0', null, null, '4,211,977,100', '36.99 %', null],
+            ['BEA.001 Tunjangan Profesi Dosen Non ASN', '11,243,336,000', '0', null, null, $realized, '37.12 %', null],
+            ['004 Dukungan Operasional Penyelenggaraan Pendidikan', '11,243,336,000', '0', null, null, $realized, '37.12 %', null],
+            ['BEA.008 Tunjangan Fungsional Dosen Non ASN', '144,300,000', '0', null, null, '38,075,000', '26.39 %', null],
+            ['004 Dukungan Operasional Penyelenggaraan Pendidikan', '144,300,000', '0', null, null, '38,075,000', '26.39 %', null],
+        ];
+    }
+
+    public function test_realization_report_with_new_codes(): void
+    {
+        $parsed = (new BudgetSheetParser)->parseRows(self::realizationReport());
+        $rows = array_column($parsed['rows'], null, 'code');
+
+        $this->assertSame('realisasi', $parsed['source']);
+        $this->assertSame(['year' => 2026, 'period_end' => '2026-06-30', 'period_label' => 'Juni 2026', 'unit' => 'UNIVERSITAS CONTOH'], $parsed['meta']);
+        $this->assertSame('program', $rows['DK']['level']);
+        $this->assertSame('kegiatan', $rows['DK.2132']['level']);
+        $this->assertSame('kro', $rows['BEA']['level']);
+        $this->assertSame('ro', $rows['BEA.001']['level']);
+        $this->assertSame('komponen', $parsed['rows'][4]['level']);
+        $this->assertSame($rows['BEA.001']['key'], $parsed['rows'][4]['parent_key']);
+        $this->assertEquals(11243336000, $rows['BEA.001']['amount']);
+        $this->assertEquals(4173902100, $parsed['rows'][4]['realized']);
+        $this->assertCount(7, $parsed['rows']); // baris JUMLAH dilewati
+    }
+
+    public function test_english_thousand_separators(): void
+    {
+        $p = new BudgetSheetParser;
+
+        $this->assertSame(259915931000.0, $p->number('259,915,931,000'));
+        $this->assertSame(1500.25, $p->number('1,500.25'));
+    }
 }

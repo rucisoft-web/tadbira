@@ -15,13 +15,13 @@ Istilah mengikuti PMBOK edisi ke-4 (SRK/WBS, tahap, tonggak, jalur kritis, peman
 - **Gantt chart** interaktif: skala hari/minggu/bulan, panah ketergantungan, sorot jalur kritis, geser batang untuk memindah, tarik ujung untuk mengubah durasi, garis hari ini dan batas tahun anggaran.
 - **Kisi SRK** yang bisa disunting langsung: durasi, pendahulu (`1.2, 1.3+2`), persen selesai, penanggung jawab.
 - **Templat proyek**: simpan proyek sebagai templat, lalu buat proyek baru cukup dengan memilih tanggal mulai. Pratinjau menampilkan tanggal selesai, tiap tahap, tonggak, dan peringatan bila melewati tahun anggaran.
-- **Impor XLS POK RKA-K/L** (ekspor SAKTI) dan **RAB/RKAP**: setiap RO menjadi satu kegiatan, dan struktur Komponen/Subkomponen bisa langsung dibentuk menjadi SRK.
+- **Impor POK RKA-K/L** (ekspor SAKTI), **Laporan Ketersediaan Dana Detail** (PDF atau XLS dari SAKTI/OM-SPAN, termasuk realisasi s.d. periode), dan **RAB/RKAP**: setiap RO menjadi satu kegiatan, dan struktur Komponen/Subkomponen bisa langsung dibentuk menjadi SRK. Unggah laporan realisasi tiap bulan untuk memperbarui pagu dan realisasi.
 - **Anggaran dan realisasi** per baris (akun/pos) dengan status komitmen/tagihan/dibayar.
 - **Riwayat** perubahan per proyek.
 
 ## Teknologi
 
-Laravel 12 (PHP 8.3+), MySQL 8 / MariaDB 10.6+, Inertia.js + Vue 3, Tailwind CSS, Chart.js, PhpSpreadsheet.
+Laravel 12 (PHP 8.3+), MySQL 8 / MariaDB 10.6+, Inertia.js + Vue 3, Tailwind CSS, Chart.js, PhpSpreadsheet, smalot/pdfparser.
 
 ## Instalasi
 
@@ -81,6 +81,15 @@ Gunakan ekspor POK dari SAKTI apa adanya. Aplikasi mencari baris judul berisi `K
 | Detail | tanpa kode, diawali `-` atau `>` |
 
 Baris jumlah/total dilewati, dan jumlah induk yang kosong dihitung dari anak-anaknya. Contoh berkas bisa diunduh dari halaman *Impor* di aplikasi.
+
+### Laporan Ketersediaan Dana Detail (realisasi)
+
+Unggah laporan *Ketersediaan Dana Detail* per Program/Kegiatan/Output/SubOutput/Komponen dari SAKTI atau OM-SPAN, baik PDF hasil unduhan (bukan hasil pindai) maupun XLS. Kode menyatu dengan uraian dan memakai kode baru (Program `DK`, Kegiatan `DK.2132`, KRO `BEA`, RO `BEA.001`, Komponen `004`).
+
+- *Pagu Revisi* menjadi anggaran, dan *Realisasi s.d. Periode* dicatat sebagai realisasi per komponen pada akhir bulan periode laporan.
+- Setiap RO menjadi satu kegiatan berkode lengkap, mis. `2132.BEA.001`. Komponen menjadi aktivitas sepanjang tahun anggaran, dengan kemajuan mengikuti persentase realisasi anggaran.
+- Unggah laporan bulan berikutnya ke tahun anggaran yang sama: kegiatan berkode sama diperbarui pagu dan realisasinya. Realisasi dicatat sebagai selisih per bulan, sehingga kurva S terbentuk, dan unggah ulang periode yang sama tidak menggandakan angka.
+- Tahun anggaran laporan harus sama dengan tahun anggaran tujuan.
 
 ### RAB / RKAP
 
