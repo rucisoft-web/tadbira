@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -20,7 +21,24 @@ class ProjectDocument extends Model
 
     protected static function booted(): void
     {
-        static::deleted(fn (self $doc) => Storage::disk('local')->delete($doc->path));
+        // Berkas contoh data demo dipakai bersama, jadi tidak ikut dihapus.
+        static::deleted(fn (self $doc) => $doc->isDemo() || Storage::disk('local')->delete($doc->path));
+    }
+
+    /** Berkas contoh data demo disimpan dengan awalan "demo/" dan dibaca dari resources/demo-dokumen. */
+    public function isDemo(): bool
+    {
+        return str_starts_with($this->path, 'demo/');
+    }
+
+    public function disk(): Filesystem
+    {
+        return Storage::disk($this->isDemo() ? 'demo' : 'local');
+    }
+
+    public function diskPath(): string
+    {
+        return $this->isDemo() ? substr($this->path, 5) : $this->path;
     }
 
     public function uniqueIds(): array

@@ -12,7 +12,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call([DemoSeeder::class, PtkinDemoSeeder::class, MedcoDemoSeeder::class, UnjDemoSeeder::class]);
+        $this->call([DemoSeeder::class, PtkinDemoSeeder::class, MedcoDemoSeeder::class, UnjDemoSeeder::class, DemoDocumentSeeder::class]);
 
         // Akun tamu (hanya-baca) untuk tiga organisasi demo yang tampil sebagai kartu.
         $guest = User::firstOrCreate(['email' => config('tadbira.guest.email')], [

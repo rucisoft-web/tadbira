@@ -38,6 +38,14 @@ return [
             'report' => false,
         ],
 
+        // Berkas contoh untuk data demo (hanya-baca, ikut di repositori).
+        'demo' => [
+            'driver' => 'local',
+            'root' => resource_path('demo-dokumen'),
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

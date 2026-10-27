@@ -68,9 +68,13 @@ Tiap unit punya akun operator, mis. `fitk@demo.uin-suka.test`, `corridor@demo.me
 
 Tab **Dokumen** pada kegiatan menyimpan berkas digital (PDF, Word, Excel, PowerPoint, gambar, ZIP, dll.), beberapa sekaligus, dengan kategori dan tautan ke aktivitas SRK. Berkas disimpan di `storage/app/private/dokumen`, di luar folder web, dan diunduh lewat aplikasi setelah pemeriksaan organisasi. Batas per berkas diatur dengan `TADBIRA_DOCUMENT_MAX_KB` (bawaan 20 MB), dan juga dibatasi `upload_max_filesize` serta `post_max_size` PHP.
 
+Data demo berisi contoh dokumen (TOR, RAB, kontrak, BAST, laporan, notulen, foto) untuk setiap kegiatan, dibuat oleh `DemoDocumentSeeder`. Berkasnya dibaca bersama dari `resources/demo-dokumen` (disk `demo`) dan tidak ikut terhapus saat dokumen demo dihapus. Untuk mengisi ulang: `php artisan db:seed --class=DemoDocumentSeeder --force`.
+
 ### Panduan pengguna
 
 Halaman `/panduan` (submenu **Panduan** di landing page) menampilkan panduan lengkap dari `resources/docs/panduan.md`, dengan tangkapan layar di `public/images/panduan/`. Ubah berkas Markdown itu untuk memperbarui panduan; daftar bab dibuat otomatis dari judul `##`.
+
+Halaman `/untuk-eksekutif` (menu **Untuk eksekutif**) merangkum manfaat Tadbira bagi pimpinan: pertanyaan yang terjawab di dasbor, manfaat bagi organisasi, ritme kerja pimpinan, dan tautan ke data demo.
 
 ### Mode tamu
 

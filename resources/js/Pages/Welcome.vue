@@ -159,6 +159,10 @@ const faqs = [
                             <p class="mt-4 text-xs text-emas-300">Menjawab: {{ s.answers }}</p>
                         </div>
                     </div>
+                    <a :href="route('executive')" class="mt-8 flex flex-col gap-2 rounded-2xl border border-emas-300/30 bg-white/5 p-5 hover:bg-white/10 sm:flex-row sm:items-center sm:justify-between">
+                        <span><span class="font-semibold text-emas-300">Untuk pimpinan:</span> enam pertanyaan yang terjawab di dasbor, manfaat bagi organisasi, dan waktu yang dibutuhkan.</span>
+                        <span class="shrink-0 font-semibold">Tadbira untuk eksekutif →</span>
+                    </a>
                 </div>
             </section>
 

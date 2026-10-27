@@ -26,6 +26,12 @@ Route::get('/', function () {
         ]);
 });
 
+Route::get('/untuk-eksekutif', fn () => Inertia::render('Executive', [
+    'demos' => GuestDemo::cards(),
+    'links' => config('tadbira.landing'),
+    'guide' => UserGuide::sections(),
+]))->name('executive');
+
 Route::get('/panduan', fn () => Inertia::render('Guide', [
     ...UserGuide::render(),
     'links' => config('tadbira.landing'),

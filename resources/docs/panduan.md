@@ -14,6 +14,8 @@ Buku tersebut menyusun sembilan bidang pengetahuan manajemen proyek (mengikuti P
 
 Cara membaca panduan ini: mulai dari bab Memulai untuk masuk ke aplikasi, lalu baca bab per bidang sesuai peran Anda. Pengguna baru bisa mencoba semua langkah tanpa akun lewat Mode tamu dengan tiga data demo (UIN Sunan Kalijaga, MedcoEnergi, UNJ).
 
+Pimpinan yang hanya butuh gambaran manfaatnya bisa mulai dari halaman [Tadbira untuk eksekutif](/untuk-eksekutif): ringkas, tanpa langkah teknis.
+
 ## 1. Memulai
 
 Buka alamat Tadbira organisasi Anda (misalnya tadbira.rucisoft.id), lalu klik **Masuk**. Ada dua cara masuk: dengan akun sendiri, atau sebagai tamu untuk melihat data demo.
@@ -253,6 +255,20 @@ Mutu perlu dibuktikan, bukan hanya diakui. Tab **Dokumen** pada setiap kegiatan 
 4. Klik **Unggah**.
 
 Setiap berkas punya tombol **Lihat** (PDF dan gambar dibuka di peramban), **Unduh**, **Ubah** (judul, kategori, aktivitas terkait), dan **Hapus**. Ubah dan hapus hanya bisa dilakukan oleh pengunggah, penanggung jawab kegiatan, atau admin. Berkas disimpan di luar folder web dan hanya bisa diunduh oleh pengguna organisasi yang sama.
+
+**Coba di data demo.** Setiap kegiatan di tiga data demo (UIN Sunan Kalijaga, MedcoEnergi, dan UNJ) sudah berisi contoh dokumen, sehingga fitur ini bisa dicoba tanpa mengunggah apa pun. Polanya mengikuti siklus kegiatan yang wajar:
+
+| Kapan | Contoh dokumen | Kategori | Terkait tonggak |
+|---|---|---|---|
+| Sebelum mulai | Kerangka acuan kerja (TOR/KAK), RAB | TOR / KAK, RAB | |
+| Kontrak diteken | Kontrak / SPK pelaksana | Kontrak / SPK | Kontrak ditandatangani |
+| Selama berjalan | Foto progres lapangan, laporan kemajuan, bahan paparan | Foto, Laporan, Lainnya | |
+| Acara (seminar, wisuda, rapat) | Surat undangan, notulen dan daftar hadir, dokumentasi | Surat, Notulen, Foto | Kegiatan terlaksana |
+| Serah terima dan penutupan | BAST, laporan akhir | BAST, Laporan | BAST diterbitkan, Laporan diterima |
+
+Masuk sebagai tamu dari halaman depan, buka kegiatan mana pun, lalu klik tab **Dokumen**. Tamu bisa melihat dan mengunduh, tetapi tidak bisa mengunggah, mengubah, atau menghapus. Isi berkas contoh itu sama untuk semua kegiatan dan diberi tanda "contoh dokumen data demo"; pada pemakaian nyata, berkasnya adalah dokumen asli kegiatan Anda.
+
+Bagi pimpinan, tab ini menjawab pertanyaan auditor yang paling sering: "mana buktinya?" Dokumen yang terkait tonggak membuat klaim kemajuan bisa diperiksa langsung, misalnya tonggak "BAST diterbitkan" yang selesai disertai berkas BAST-nya.
 
 ### SDM: tabligh dalam memimpin tim
 

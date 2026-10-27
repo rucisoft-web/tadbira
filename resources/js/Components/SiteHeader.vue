@@ -18,14 +18,16 @@ const menu = [
 ];
 const open = ref(false);
 const guidePath = route('guide');
+const executivePath = route('executive');
 </script>
 
 <template>
     <header class="sticky top-0 z-30 border-b border-gading-200 bg-gading-50/90 backdrop-blur">
         <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
             <Link href="/" class="h-10 shrink-0"><ApplicationLogo with-text class="h-10" /></Link>
-            <nav class="hidden items-center gap-5 text-sm font-medium text-slate-600 lg:flex">
+            <nav class="hidden items-center gap-4 whitespace-nowrap text-sm font-medium text-slate-600 lg:flex xl:gap-5">
                 <a v-for="m in menu" :key="m.href" :href="base + m.href" class="hover:text-zamrud-800">{{ m.label }}</a>
+                <a :href="executivePath" class="hover:text-zamrud-800">Untuk eksekutif</a>
                 <div class="relative" @mouseenter="open = true" @mouseleave="open = false">
                     <button type="button" class="flex items-center gap-1 hover:text-zamrud-800" :aria-expanded="open" @click="open = !open">
                         Panduan
@@ -40,9 +42,10 @@ const guidePath = route('guide');
                     </div>
                 </div>
                 <a :href="base + '#tanya'" class="hover:text-zamrud-800">Tanya jawab</a>
-                <a :href="site" class="hover:text-zamrud-800">Rucisoft.id</a>
+                <a :href="site" class="hidden hover:text-zamrud-800 xl:inline">Rucisoft.id</a>
             </nav>
             <div class="flex items-center gap-3">
+                <a :href="executivePath" class="hidden text-sm font-medium text-slate-600 hover:text-zamrud-800 sm:inline lg:hidden">Eksekutif</a>
                 <a :href="guidePath" class="hidden text-sm font-medium text-slate-600 hover:text-zamrud-800 sm:inline lg:hidden">Panduan</a>
                 <Link :href="route('login')" class="tombol">Masuk</Link>
             </div>

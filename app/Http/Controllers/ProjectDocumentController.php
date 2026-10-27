@@ -72,7 +72,7 @@ class ProjectDocumentController extends Controller
     public function show(Request $request, ProjectDocument $document): StreamedResponse
     {
         $this->authorizeProject($request, $document->project ?? abort(404));
-        abort_unless(Storage::disk('local')->exists($document->path), 404, 'Berkas tidak ditemukan di server.');
+        abort_unless($document->disk()->exists($document->diskPath()), 404, 'Berkas tidak ditemukan di server.');
 
         $headers = ['Content-Type' => $document->mime ?: 'application/octet-stream', 'X-Content-Type-Options' => 'nosniff'];
 
@@ -81,10 +81,10 @@ class ProjectDocumentController extends Controller
             // Gambar dan teks dikurung CSP sandbox; PDF tidak, karena penampil PDF peramban menolak halaman ber-sandbox.
             $csp = $document->extension === 'pdf' ? "default-src 'none'; object-src 'self'" : "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; sandbox";
 
-            return Storage::disk('local')->response($document->path, $document->original_name, $headers + ['Content-Security-Policy' => $csp]);
+            return $document->disk()->response($document->diskPath(), $document->original_name, $headers + ['Content-Security-Policy' => $csp]);
         }
 
-        return Storage::disk('local')->download($document->path, $document->original_name, $headers);
+        return $document->disk()->download($document->diskPath(), $document->original_name, $headers);
     }
 
     public function update(Request $request, ProjectDocument $document): RedirectResponse
