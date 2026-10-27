@@ -123,7 +123,7 @@ const createFy = () => fyForm.post(route('fiscal-years.store'), { onSuccess: () 
 
             <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                 <StatCard :label="terms.budget_ceiling" :value="rupiahRingkas(totals.ceiling)" :hint="ceilingUse !== null ? `${persen(ceilingUse, 1)} sudah dialokasikan ke ${terms.project?.toLowerCase()}` : 'Belum diisi'" accent="#D4A72C" />
-                <StatCard label="Anggaran proyek" :value="rupiahRingkas(totals.budget)" :hint="`${totals.count} ${terms.project?.toLowerCase()}`" accent="#10B981" />
+                <StatCard :label="`Anggaran ${terms.project?.toLowerCase()}`" :value="rupiahRingkas(totals.budget)" :hint="`${totals.count} ${terms.project?.toLowerCase()}`" accent="#10B981" />
                 <StatCard :label="terms.realization" :value="rupiahRingkas(totals.realized)" :hint="`Penyerapan ${persen(absorption, 1)}`" accent="#38BDF8">
                     <ProgressBar class="mt-3" :value="Math.round(absorption)" color="#38BDF8" />
                 </StatCard>
@@ -139,7 +139,7 @@ const createFy = () => fyForm.post(route('fiscal-years.store'), { onSuccess: () 
                 </div>
                 <div class="kartu p-5">
                     <h3 class="judul-kartu">Status {{ terms.project?.toLowerCase() }}</h3>
-                    <p class="mb-3 text-xs text-slate-500">Tahap siklus hidup proyek</p>
+                    <p class="mb-3 text-xs text-slate-500">Tahap siklus hidup {{ terms.project?.toLowerCase() }}</p>
                     <StatusDoughnut :items="statusItems" :center-value="persen(totals.avg_progress)" center-label="rata-rata selesai" />
                 </div>
                 <div class="kartu p-5">
