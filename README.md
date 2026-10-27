@@ -21,7 +21,7 @@ Istilah mengikuti PMBOK edisi ke-4 (SRK/WBS, tahap, tonggak, jalur kritis, peman
 
 ## Teknologi
 
-Laravel 12 (PHP 8.2+), MySQL 8 / MariaDB 10.6+, Inertia.js + Vue 3, Tailwind CSS, Chart.js, PhpSpreadsheet.
+Laravel 12 (PHP 8.3+), MySQL 8 / MariaDB 10.6+, Inertia.js + Vue 3, Tailwind CSS, Chart.js, PhpSpreadsheet.
 
 ## Instalasi
 
