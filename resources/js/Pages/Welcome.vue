@@ -1,13 +1,14 @@
 <script setup>
 import { computed } from 'vue';
 import { Head, Link } from '@inertiajs/vue3';
-import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import DemoCards from '@/Components/DemoCards.vue';
+import SiteHeader from '@/Components/SiteHeader.vue';
 
 const props = defineProps({
     canRegister: Boolean,
     demos: { type: Array, default: () => [] },
     links: { type: Object, default: () => ({}) },
+    guide: { type: Array, default: () => [] },
 });
 
 const step = (langkah) => `${props.links.solution}?langkah=${langkah}#mulai`;
@@ -15,14 +16,6 @@ const whatsapp = computed(
     () => `https://wa.me/${props.links.whatsapp}?text=${encodeURIComponent('Halo Rucisoft, saya tertarik dengan Tadbira.')}`,
 );
 const guestHref = computed(() => (props.demos.length ? '#data-demo' : route('login')));
-
-const menu = [
-    { label: 'Kenapa perlu', href: '#kenapa' },
-    { label: 'Fitur', href: '#fitur' },
-    { label: 'Data demo', href: '#data-demo' },
-    { label: 'Panduan', href: '#panduan' },
-    { label: 'Tanya jawab', href: '#tanya' },
-];
 
 const problems = [
     { title: 'Kegiatan menumpuk di akhir tahun', text: 'Rencana kegiatan disusun di awal tahun, lalu baru bergerak menjelang triwulan IV. Penyerapan anggaran terlambat dan mutu kegiatan turun.', color: '#F97316' },
@@ -97,16 +90,7 @@ const faqs = [
 <template>
     <Head title="Kelola proyek dengan amanah" />
     <div class="min-h-screen bg-gading-50 bg-pola-terang text-slate-700">
-        <header class="sticky top-0 z-30 border-b border-gading-200 bg-gading-50/90 backdrop-blur">
-            <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
-                <Link href="/" class="h-10 shrink-0"><ApplicationLogo with-text class="h-10" /></Link>
-                <nav class="hidden items-center gap-5 text-sm font-medium text-slate-600 lg:flex">
-                    <a v-for="m in menu" :key="m.href" :href="m.href" class="hover:text-zamrud-800">{{ m.label }}</a>
-                    <a :href="links.site" class="hover:text-zamrud-800">Rucisoft.id</a>
-                </nav>
-                <Link :href="route('login')" class="tombol">Masuk</Link>
-            </div>
-        </header>
+        <SiteHeader on-home :guide="guide" :site="links.site" />
 
         <main>
             <!-- Pembuka -->
@@ -120,7 +104,7 @@ const faqs = [
                         </p>
                         <div class="mt-7 flex flex-wrap gap-3">
                             <a :href="guestHref" class="tombol">Coba data demo 2026</a>
-                            <a href="#panduan" class="tombol-sekunder">Baca panduannya</a>
+                            <a :href="route('guide')" class="tombol-sekunder">Baca panduannya</a>
                         </div>
                         <p class="mt-3 text-sm text-slate-500">Tanpa akun. Mode tamu hanya untuk melihat.</p>
                     </div>
@@ -255,6 +239,20 @@ const faqs = [
                             <h3 class="font-semibold text-zamrud-950">{{ r.title }}</h3>
                             <p class="mt-2 text-sm">{{ r.text }}</p>
                         </div>
+                    </div>
+                    <div v-if="guide.length" class="mt-10 rounded-2xl bg-zamrud-900 p-6 text-white sm:p-8">
+                        <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold">Panduan pengguna lengkap</h3>
+                                <p class="mt-1 max-w-2xl text-sm text-zamrud-100">Teori manajemen proyek dari buku <em>Catatan Kecil Manajer Proyek</em>, langkah demi langkah di Tadbira, dan tangkapan layar.</p>
+                            </div>
+                            <a :href="route('guide')" class="tombol shrink-0 bg-emas-500 text-zamrud-950 hover:bg-emas-400">Buka panduan</a>
+                        </div>
+                        <ol class="mt-6 grid gap-2 text-sm sm:grid-cols-2 lg:grid-cols-3">
+                            <li v-for="s in guide" :key="s.id">
+                                <a :href="`${route('guide')}#${s.id}`" class="block rounded-lg bg-white/5 px-3 py-2 hover:bg-white/10">{{ s.title }}</a>
+                            </li>
+                        </ol>
                     </div>
                 </div>
             </section>

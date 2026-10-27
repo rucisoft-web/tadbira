@@ -10,6 +10,7 @@ use App\Http\Controllers\ProjectController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TemplateController;
 use App\Support\GuestDemo;
+use App\Support\UserGuide;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -20,8 +21,14 @@ Route::get('/', function () {
             'canRegister' => Route::has('register'),
             'demos' => GuestDemo::cards(),
             'links' => config('tadbira.landing'),
+            'guide' => UserGuide::sections(),
         ]);
 });
+
+Route::get('/panduan', fn () => Inertia::render('Guide', [
+    ...UserGuide::render(),
+    'links' => config('tadbira.landing'),
+]))->name('guide');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dasbor', DashboardController::class)->name('dashboard');

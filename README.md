@@ -64,6 +64,10 @@ Buka http://127.0.0.1:8000 dan masuk dengan akun contoh **admin@tadbira.test** /
 
 Tiap unit punya akun operator, mis. `fitk@demo.uin-suka.test`, `corridor@demo.medco.test`, `lppm@demo.unj.test` / `password`. Pindah organisasi lewat pemilih di bilah samping. Untuk organisasi sendiri, daftar lewat halaman *Daftar*: pilih sektor organisasi, dan tahun anggaran berjalan dibuat otomatis.
 
+### Panduan pengguna
+
+Halaman `/panduan` (submenu **Panduan** di landing page) menampilkan panduan lengkap dari `resources/docs/panduan.md`, dengan tangkapan layar di `public/images/panduan/`. Ubah berkas Markdown itu untuk memperbarui panduan; daftar bab dibuat otomatis dari judul `##`.
+
 ### Mode tamu
 
 Set `TADBIRA_GUEST_LOGIN=true` di `.env` untuk menampilkan kartu data demo (UIN Sunan Kalijaga, MedcoEnergi, UNJ) di halaman depan dan halaman masuk. Tamu masuk tanpa kata sandi lewat `/masuk-tamu?organisasi={ulid}` dan hanya bisa melihat; semua perubahan data ditolak. Akun tamu (`tamu@tadbira.test`) dibuat oleh `php artisan db:seed`.
