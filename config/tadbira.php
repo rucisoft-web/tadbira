@@ -168,6 +168,15 @@ return [
         'pos' => 'Pos anggaran',
     ],
 
+    // Berkas digital kegiatan. Batas ukuran juga dibatasi oleh upload_max_filesize dan
+    // post_max_size PHP di server (cPanel > Select PHP Version > Options).
+    'documents' => [
+        'max_kb' => (int) env('TADBIRA_DOCUMENT_MAX_KB', 20480),
+        'extensions' => ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'odt', 'ods', 'odp', 'rtf', 'csv', 'txt',
+            'jpg', 'jpeg', 'png', 'webp', 'gif', 'zip', 'rar', '7z', 'dwg', 'mp4'],
+        'categories' => ['TOR / KAK', 'RAB', 'Kontrak / SPK', 'BAST', 'Laporan', 'Notulen', 'Foto / dokumentasi', 'Surat', 'Lainnya'],
+    ],
+
     // Nilai yang menjiwai tiap bidang manajemen (ditampilkan sebagai pengingat).
     'values' => [
         'integrasi' => ['nilai' => 'Istikamah', 'pesan' => 'Menjaga keselarasan tujuan, keputusan, dan tindakan.'],

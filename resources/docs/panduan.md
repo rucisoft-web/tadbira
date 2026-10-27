@@ -8,7 +8,7 @@ Buku tersebut menyusun sembilan bidang pengetahuan manajemen proyek (mengikuti P
 | --- | --- | --- |
 | Istikamah (konsisten) | Integrasi | Dasbor portofolio, siklus pemantauan bulanan |
 | Sidik (benar) | Lingkup, Waktu | Daftar kegiatan, templat SRK, Gantt, jalur kritis |
-| Amanah (dapat dipercaya) | Biaya, Mutu | Anggaran, impor POK, realisasi, kurva S, tonggak BAST |
+| Amanah (dapat dipercaya) | Biaya, Mutu | Anggaran, impor POK, realisasi, kurva S, tonggak BAST, dokumen kegiatan |
 | Tabligh (menyampaikan) | SDM, Komunikasi | Penanggung jawab, akun operator, sasaran & IKU, laporan per unit |
 | Fathanah (cerdas) | Risiko, Pengadaan | Kesehatan kegiatan (SPI), daftar Perlu perhatian, tahapan pengadaan |
 
@@ -240,6 +240,19 @@ Buku menulis: "Atap sudah dipasang, namun bocor ketika hujan." Mutu berarti kese
 **Di Tadbira**, mutu dicatat lewat tonggak serah terima. Tambahkan tonggak seperti "Pemeriksaan dan serah terima" dan "BAST diterbitkan" di Kisi SRK. Tonggak tampil di tab **Ringkasan** beserta tanggalnya, dan baru diisi 100% setelah hasil diperiksa sesuai spesifikasi. Status kegiatan (Perencanaan, Pelaksanaan, Selesai) diubah di kotak **Jadwal & status**; ubah ke Selesai hanya setelah BAST terbit.
 
 ![Tab Ringkasan: aktivitas berikutnya, sasaran program, tonggak, dan jadwal & status](/images/panduan/10-ringkasan.webp)
+
+### Dokumen kegiatan: bukti yang tersimpan rapi
+
+Mutu perlu dibuktikan, bukan hanya diakui. Tab **Dokumen** pada setiap kegiatan menyimpan berkas digitalnya: TOR/KAK, RAB, kontrak, BAST, laporan, notulen, surat, dan foto dokumentasi.
+
+![Tab Dokumen: daftar berkas dan kotak unggah](/images/panduan/14-dokumen.webp)
+
+1. Buka kegiatan, lalu tab **Dokumen**.
+2. Seret berkas ke kotak **Unggah dokumen**, atau klik untuk memilih. Bisa beberapa berkas sekaligus, dengan jenis berbeda (PDF, Word, Excel, PowerPoint, gambar, ZIP, dan lainnya).
+3. Pilih **Kategori** (misalnya BAST) dan, bila perlu, aktivitas atau tonggak terkait di Kisi SRK (misalnya "BAST diterbitkan").
+4. Klik **Unggah**.
+
+Setiap berkas punya tombol **Lihat** (PDF dan gambar dibuka di peramban), **Unduh**, **Ubah** (judul, kategori, aktivitas terkait), dan **Hapus**. Ubah dan hapus hanya bisa dilakukan oleh pengunggah, penanggung jawab kegiatan, atau admin. Berkas disimpan di luar folder web dan hanya bisa diunduh oleh pengguna organisasi yang sama.
 
 ### SDM: tabligh dalam memimpin tim
 

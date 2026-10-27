@@ -6,6 +6,7 @@ import HealthBadge from '@/Components/HealthBadge.vue';
 import ProgressBar from '@/Components/ProgressBar.vue';
 import StatCard from '@/Components/StatCard.vue';
 import ProjectGantt from '@/Components/ProjectGantt.vue';
+import ProjectDocuments from '@/Components/ProjectDocuments.vue';
 import { persen, rupiah, rupiahRingkas, tanggal, tanggalPanjang } from '@/lib/format';
 
 const props = defineProps({
@@ -17,6 +18,8 @@ const props = defineProps({
     activity: Array,
     users: Array,
     goals: { type: Array, default: () => [] },
+    documents: { type: Array, default: () => [] },
+    documentRules: { type: Object, default: () => ({ max_kb: 20480, extensions: [], categories: [] }) },
 });
 
 const page = usePage();
@@ -25,7 +28,7 @@ const errors = computed(() => page.props.errors ?? {});
 const now = new Date();
 const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-const tabs = ['ringkasan', 'kisi', 'gantt', 'anggaran', 'riwayat'];
+const tabs = ['ringkasan', 'kisi', 'gantt', 'anggaran', 'dokumen', 'riwayat'];
 const initialTab = new URLSearchParams(window.location.search).get('tab');
 const tab = ref(tabs.includes(initialTab) ? initialTab : 'gantt');
 const setTab = (t) => {
@@ -145,7 +148,8 @@ const kindLabel = { phase: terms.value.phase, work_package: terms.value.work_pac
         <!-- Tab -->
         <nav class="mt-8 flex gap-6 overflow-x-auto border-b border-gading-200">
             <button v-for="t in tabs" :key="t" type="button" class="tab capitalize" :class="{ 'tab-aktif': tab === t }" @click="setTab(t)">
-                {{ { ringkasan: 'Ringkasan', kisi: 'Kisi SRK', gantt: 'Gantt', anggaran: 'Anggaran', riwayat: 'Riwayat' }[t] }}
+                {{ { ringkasan: 'Ringkasan', kisi: 'Kisi SRK', gantt: 'Gantt', anggaran: 'Anggaran', dokumen: 'Dokumen', riwayat: 'Riwayat' }[t] }}
+                <span v-if="t === 'dokumen' && documents.length" class="ml-1 rounded-full bg-zamrud-100 px-1.5 text-[11px] text-zamrud-800">{{ documents.length }}</span>
             </button>
         </nav>
 
@@ -403,6 +407,11 @@ const kindLabel = { phase: terms.value.phase, work_package: terms.value.work_pac
                     </tbody>
                 </table>
             </div>
+        </section>
+
+        <!-- Dokumen -->
+        <section v-if="tab === 'dokumen'" class="mt-6">
+            <ProjectDocuments :project="project" :documents="documents" :rules="documentRules" :tasks="tasks" :read-only="!!page.props.auth?.is_guest" />
         </section>
 
         <!-- Riwayat -->

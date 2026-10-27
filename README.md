@@ -64,6 +64,10 @@ Buka http://127.0.0.1:8000 dan masuk dengan akun contoh **admin@tadbira.test** /
 
 Tiap unit punya akun operator, mis. `fitk@demo.uin-suka.test`, `corridor@demo.medco.test`, `lppm@demo.unj.test` / `password`. Pindah organisasi lewat pemilih di bilah samping. Untuk organisasi sendiri, daftar lewat halaman *Daftar*: pilih sektor organisasi, dan tahun anggaran berjalan dibuat otomatis.
 
+### Dokumen kegiatan
+
+Tab **Dokumen** pada kegiatan menyimpan berkas digital (PDF, Word, Excel, PowerPoint, gambar, ZIP, dll.), beberapa sekaligus, dengan kategori dan tautan ke aktivitas SRK. Berkas disimpan di `storage/app/private/dokumen`, di luar folder web, dan diunduh lewat aplikasi setelah pemeriksaan organisasi. Batas per berkas diatur dengan `TADBIRA_DOCUMENT_MAX_KB` (bawaan 20 MB), dan juga dibatasi `upload_max_filesize` serta `post_max_size` PHP.
+
 ### Panduan pengguna
 
 Halaman `/panduan` (submenu **Panduan** di landing page) menampilkan panduan lengkap dari `resources/docs/panduan.md`, dengan tangkapan layar di `public/images/panduan/`. Ubah berkas Markdown itu untuk memperbarui panduan; daftar bab dibuat otomatis dari judul `##`.

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ActivityLog;
 use App\Models\BudgetLine;
 use App\Models\Project;
+use App\Models\ProjectDocument;
 use App\Models\Task;
 use App\Services\ActivityLogger;
 use App\Services\PortfolioService;
@@ -173,7 +174,35 @@ class ProjectController extends Controller
             'activity' => ActivityLog::where('project_id', $project->id)->latest('created_at')->limit(15)->with('causer:id,name')
                 ->get()->map(fn ($a) => ['description' => $a->description, 'by' => $a->causer?->name, 'at' => $a->created_at?->toIso8601String()]),
             'users' => $project->organization->users()->orderBy('name')->get(['users.id', 'users.name']),
+            'documents' => $this->documents($request, $project),
+            'documentRules' => [
+                'max_kb' => config('tadbira.documents.max_kb'),
+                'extensions' => config('tadbira.documents.extensions'),
+                'categories' => config('tadbira.documents.categories'),
+            ],
         ]);
+    }
+
+    private function documents(Request $request, Project $project): array
+    {
+        $user = $request->user();
+        $isAdmin = $user->organizations()->whereKey($project->organization_id)->value('role') === 'admin';
+        $canManageAll = $isAdmin || (int) $project->leader_id === (int) $user->id;
+
+        return $project->documents()->with(['uploader:id,name', 'task:id,ulid,wbs_code,title'])->get()
+            ->map(fn (ProjectDocument $d) => [
+                'ulid' => $d->ulid,
+                'title' => $d->title,
+                'category' => $d->category,
+                'original_name' => $d->original_name,
+                'extension' => $d->extension,
+                'size' => $d->size,
+                'previewable' => $d->previewable(),
+                'task' => $d->task ? ['ulid' => $d->task->ulid, 'label' => trim($d->task->wbs_code.' '.$d->task->title)] : null,
+                'uploader' => $d->uploader?->name,
+                'uploaded_at' => $d->created_at?->toIso8601String(),
+                'can_manage' => ! $user->isGuest() && ($canManageAll || (int) $d->uploaded_by === (int) $user->id),
+            ])->all();
     }
 
     public function update(Request $request, Project $project, ProjectScheduler $scheduler): RedirectResponse

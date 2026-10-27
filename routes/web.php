@@ -7,6 +7,7 @@ use App\Http\Controllers\FiscalYearController;
 use App\Http\Controllers\OrganizationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ProjectController;
+use App\Http\Controllers\ProjectDocumentController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TemplateController;
 use App\Support\GuestDemo;
@@ -41,6 +42,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/proyek/{project}', [ProjectController::class, 'show'])->name('projects.show');
     Route::patch('/proyek/{project}', [ProjectController::class, 'update'])->name('projects.update');
     Route::delete('/proyek/{project}', [ProjectController::class, 'destroy'])->name('projects.destroy');
+
+    Route::post('/proyek/{project}/dokumen', [ProjectDocumentController::class, 'store'])->name('documents.store');
+    Route::get('/dokumen/{document}', [ProjectDocumentController::class, 'show'])->name('documents.show');
+    Route::patch('/dokumen/{document}', [ProjectDocumentController::class, 'update'])->name('documents.update');
+    Route::delete('/dokumen/{document}', [ProjectDocumentController::class, 'destroy'])->name('documents.destroy');
 
     Route::post('/proyek/{project}/aktivitas', [TaskController::class, 'store'])->name('tasks.store');
     Route::patch('/aktivitas/{task}', [TaskController::class, 'update'])->name('tasks.update');

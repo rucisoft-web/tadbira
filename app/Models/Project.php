@@ -94,6 +94,11 @@ class Project extends Model
         return $this->hasMany(TaskDependency::class);
     }
 
+    public function documents(): HasMany
+    {
+        return $this->hasMany(ProjectDocument::class)->latest();
+    }
+
     public function budgetLines(): HasMany
     {
         return $this->hasMany(BudgetLine::class)->orderBy('position');
