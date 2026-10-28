@@ -25,7 +25,7 @@ class TaskController extends Controller
 
     public function store(Request $request, Project $project): RedirectResponse
     {
-        $this->authorizeProject($request, $project);
+        $this->authorizeAbility($request, 'edit_project', $project);
         $data = $this->validated($request, $project, creating: true);
 
         DB::transaction(function () use ($project, $data, $request) {
@@ -49,7 +49,7 @@ class TaskController extends Controller
     public function update(Request $request, Task $task): RedirectResponse
     {
         $project = $task->project;
-        $this->authorizeProject($request, $project);
+        $this->authorizeAbility($request, 'edit_project', $project);
         $data = $this->validated($request, $project);
 
         DB::transaction(function () use ($project, $task, $data, $request) {
@@ -95,7 +95,7 @@ class TaskController extends Controller
     public function destroy(Request $request, Task $task): RedirectResponse
     {
         $project = $task->project;
-        $this->authorizeProject($request, $project);
+        $this->authorizeAbility($request, 'edit_project', $project);
 
         DB::transaction(function () use ($project, $task, $request) {
             ActivityLogger::log($project, $task, 'deleted', "{$request->user()->name} menghapus \"{$task->title}\"");

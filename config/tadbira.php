@@ -20,6 +20,49 @@ return [
         'email' => env('TADBIRA_GUEST_EMAIL', 'tamu@tadbira.test'),
     ],
 
+    // Peran dalam organisasi dan hak aksesnya. true = semua kegiatan; 'unit' = hanya kegiatan di
+    // unit kerjanya atau yang ia pimpin/ikuti. Peran lama "anggota" diperlakukan sebagai perencana.
+    'roles' => [
+        'admin' => [
+            'label' => 'Admin',
+            'description' => 'Mengatur organisasi, pengguna, unit kerja, tahun anggaran, dan hari libur. Bisa melakukan semua hal.',
+            'can' => ['settings' => true, 'fiscal_years' => true, 'create_project' => true, 'edit_project' => true, 'delete_project' => true, 'documents' => true, 'import_budget' => true, 'record_expenditure' => true],
+        ],
+        'pimpinan' => [
+            'label' => 'Pimpinan',
+            'description' => 'Melihat dasbor, semua kegiatan, anggaran, dan dokumen. Tidak mengubah data.',
+            'can' => [],
+        ],
+        'perencana' => [
+            'label' => 'Perencana',
+            'description' => 'Menyusun dan mengubah semua kegiatan, membuat tahun anggaran, mengimpor POK/RAB, dan memverifikasi.',
+            'can' => ['fiscal_years' => true, 'create_project' => true, 'edit_project' => true, 'delete_project' => true, 'documents' => true, 'import_budget' => true, 'record_expenditure' => true],
+        ],
+        'keuangan' => [
+            'label' => 'Keuangan',
+            'description' => 'Mengimpor anggaran dan laporan realisasi, mencatat realisasi, dan mengunggah dokumen keuangan.',
+            'can' => ['documents' => true, 'import_budget' => true, 'record_expenditure' => true],
+        ],
+        'operator' => [
+            'label' => 'Operator unit',
+            'description' => 'Membuat dan memperbarui kegiatan di unit kerjanya: aktivitas, kemajuan, dan dokumen.',
+            'can' => ['create_project' => 'unit', 'edit_project' => 'unit', 'documents' => 'unit'],
+        ],
+    ],
+
+    // Hak akses yang ditampilkan di halaman Pengaturan > Peran.
+    'abilities' => [
+        'view' => 'Melihat dasbor, kegiatan, anggaran, dan dokumen',
+        'create_project' => 'Membuat kegiatan baru',
+        'edit_project' => 'Mengubah jadwal, aktivitas, dan kemajuan',
+        'documents' => 'Mengunggah dokumen kegiatan',
+        'delete_project' => 'Menghapus kegiatan',
+        'import_budget' => 'Mengimpor POK/RAB dan laporan realisasi',
+        'record_expenditure' => 'Mencatat realisasi per akun',
+        'fiscal_years' => 'Membuat tahun anggaran',
+        'settings' => 'Membuka menu Pengaturan',
+    ],
+
     // Tautan di halaman depan (program Rucisoft untuk Tadbira).
     'landing' => [
         'site' => 'https://rucisoft.id',

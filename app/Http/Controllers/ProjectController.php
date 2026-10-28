@@ -12,6 +12,7 @@ use App\Services\PortfolioService;
 use App\Services\Scheduling\PredecessorParser;
 use App\Services\Scheduling\ProjectScheduler;
 use App\Services\TemplateService;
+use App\Support\Access;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -51,7 +52,10 @@ class ProjectController extends Controller
             'templates' => Project::templates()->where('organization_id', $org->id)
                 ->withCount('tasks')->get(['id', 'ulid', 'name', 'category', 'description']),
             'selectedTemplate' => $request->string('templat')->toString() ?: null,
-            'users' => $org->users()->orderBy('name')->get(['users.id', 'users.name']),
+            'users' => $org->users()->wherePivot('is_active', true)->where('users.email', '!=', config('tadbira.guest.email'))
+                ->orderBy('name')->get(['users.id', 'users.name']),
+            'units' => $org->units()->get(['name', 'full_name']),
+            'forcedCategory' => $this->access($request)->forcedCategory(),
         ]);
     }
 
@@ -68,9 +72,13 @@ class ProjectController extends Controller
             'scheduling_direction' => ['required', Rule::in(['forward', 'backward'])],
             'anchor_date' => ['required', 'date'],
             'budget_amount' => ['nullable', 'numeric', 'min:0'],
-            'leader_id' => ['nullable', 'integer'],
+            'leader_id' => ['nullable', 'integer', Rule::exists('organization_user', 'user_id')->where('organization_id', $org->id)],
             'goal_id' => ['nullable', 'integer'],
         ]);
+        // Operator unit hanya membuat kegiatan untuk unitnya sendiri.
+        if ($forced = $this->access($request)->forcedCategory()) {
+            $data['category'] = $forced;
+        }
 
         $fy = $org->fiscalYears()->where('ulid', $data['fiscal_year'])->firstOrFail();
         $goalId = ! empty($data['goal_id']) ? $fy->goals()->whereKey($data['goal_id'])->value('id') : null;
@@ -110,6 +118,7 @@ class ProjectController extends Controller
     public function show(Request $request, Project $project, PortfolioService $portfolio): Response
     {
         $this->authorizeProject($request, $project);
+        $access = $this->access($request);
         $project->load(['fiscalYear', 'goal.indicators', 'leader:id,name', 'tasks.assignees:id,name', 'dependencies']);
 
         $tasks = $this->orderedTasks($project->tasks);
@@ -173,8 +182,10 @@ class ProjectController extends Controller
             'budgetLevels' => config('tadbira.budget_levels'),
             'activity' => ActivityLog::where('project_id', $project->id)->latest('created_at')->limit(15)->with('causer:id,name')
                 ->get()->map(fn ($a) => ['description' => $a->description, 'by' => $a->causer?->name, 'at' => $a->created_at?->toIso8601String()]),
-            'users' => $project->organization->users()->orderBy('name')->get(['users.id', 'users.name']),
-            'documents' => $this->documents($request, $project),
+            'users' => $project->organization->users()->wherePivot('is_active', true)->where('users.email', '!=', config('tadbira.guest.email'))
+                ->orderBy('name')->get(['users.id', 'users.name']),
+            'permissions' => $access->projectPermissions($project),
+            'documents' => $this->documents($access, $project),
             'documentRules' => [
                 'max_kb' => config('tadbira.documents.max_kb'),
                 'extensions' => config('tadbira.documents.extensions'),
@@ -183,12 +194,8 @@ class ProjectController extends Controller
         ]);
     }
 
-    private function documents(Request $request, Project $project): array
+    private function documents(Access $access, Project $project): array
     {
-        $user = $request->user();
-        $isAdmin = $user->organizations()->whereKey($project->organization_id)->value('role') === 'admin';
-        $canManageAll = $isAdmin || (int) $project->leader_id === (int) $user->id;
-
         return $project->documents()->with(['uploader:id,name', 'task:id,ulid,wbs_code,title'])->get()
             ->map(fn (ProjectDocument $d) => [
                 'ulid' => $d->ulid,
@@ -201,13 +208,13 @@ class ProjectController extends Controller
                 'task' => $d->task ? ['ulid' => $d->task->ulid, 'label' => trim($d->task->wbs_code.' '.$d->task->title)] : null,
                 'uploader' => $d->uploader?->name,
                 'uploaded_at' => $d->created_at?->toIso8601String(),
-                'can_manage' => ! $user->isGuest() && ($canManageAll || (int) $d->uploaded_by === (int) $user->id),
+                'can_manage' => ProjectDocumentController::canManage($access, $d->setRelation('project', $project)),
             ])->all();
     }
 
     public function update(Request $request, Project $project, ProjectScheduler $scheduler): RedirectResponse
     {
-        $this->authorizeProject($request, $project);
+        $this->authorizeAbility($request, 'edit_project', $project);
         $data = $request->validate([
             'name' => ['sometimes', 'string', 'max:200'],
             'code' => ['sometimes', 'nullable', 'string', 'max:60'],
@@ -241,7 +248,7 @@ class ProjectController extends Controller
 
     public function destroy(Request $request, Project $project): RedirectResponse
     {
-        $this->authorizeProject($request, $project);
+        $this->authorizeAbility($request, 'delete_project', $project);
         $project->delete();
 
         return redirect()->route('projects.index')->with('success', 'Proyek dihapus.');

@@ -20,7 +20,9 @@ const props = defineProps({
     goals: { type: Array, default: () => [] },
     documents: { type: Array, default: () => [] },
     documentRules: { type: Object, default: () => ({ max_kb: 20480, extensions: [], categories: [] }) },
+    permissions: { type: Object, default: () => ({ edit: false, delete: false, documents: false, import_budget: false, record_expenditure: false }) },
 });
+const canEdit = computed(() => props.permissions.edit);
 
 const page = usePage();
 const terms = computed(() => page.props.terms);
@@ -48,7 +50,7 @@ const milestones = computed(() => props.tasks.filter((t) => t.kind === 'mileston
 
 // ---------- Kisi ----------
 const save = (task, field, value) => {
-    if (task[field] === value) return;
+    if (!canEdit.value || task[field] === value) return;
     router.patch(route('tasks.update', task.ulid), { [field]: value }, { preserveScroll: true, preserveState: true });
 };
 const remove = (task) => {
@@ -191,7 +193,11 @@ const kindLabel = { phase: terms.value.phase, work_package: terms.value.work_pac
                         <li v-if="!milestones.length" class="text-slate-500">Belum ada tonggak.</li>
                     </ul>
                 </div>
-                <form class="kartu space-y-3 p-5" @submit.prevent="saveSettings">
+                <div v-if="!canEdit" class="kartu p-5 text-sm text-slate-600">
+                    <h3 class="judul-kartu mb-1">Hanya melihat</h3>
+                    Peran Anda ({{ page.props.auth.access?.role_label ?? 'tamu' }}) tidak mengubah jadwal kegiatan ini. Hubungi penanggung jawab kegiatan atau perencana.
+                </div>
+                <form v-if="canEdit" class="kartu space-y-3 p-5" @submit.prevent="saveSettings">
                     <h3 class="judul-kartu">Jadwal &amp; status</h3>
                     <select v-model="settings.scheduling_direction" class="masukan w-full">
                         <option value="forward">Dari tanggal mulai</option>
@@ -219,7 +225,7 @@ const kindLabel = { phase: terms.value.phase, work_package: terms.value.work_pac
                     </div>
                     <button class="tombol w-full justify-center" :disabled="settings.processing">Simpan</button>
                 </form>
-                <form class="kartu space-y-3 p-5" @submit.prevent="saveTemplate">
+                <form v-if="canEdit" class="kartu space-y-3 p-5" @submit.prevent="saveTemplate">
                     <h3 class="judul-kartu">Simpan sebagai templat</h3>
                     <input v-model="templateForm.name" type="text" class="masukan w-full">
                     <label class="flex items-center gap-2 text-sm text-slate-600">
@@ -261,6 +267,7 @@ const kindLabel = { phase: terms.value.phase, work_package: terms.value.work_pac
                                         :value="t.title"
                                         class="w-full rounded border-transparent bg-transparent px-1 py-1 text-sm hover:border-gading-200 focus:border-zamrud-500 focus:ring-zamrud-500"
                                         :class="t.is_summary ? 'font-semibold text-zamrud-950' : ''"
+                                        :readonly="!canEdit"
                                         @change="save(t, 'title', $event.target.value)"
                                     >
                                 </div>
@@ -268,20 +275,21 @@ const kindLabel = { phase: terms.value.phase, work_package: terms.value.work_pac
                             <td class="px-3 py-1.5 text-xs text-slate-500">{{ kindLabel[t.kind] }}</td>
                             <td class="px-3 py-1.5">
                                 <span v-if="t.is_summary" class="tabular-nums">{{ t.duration_days }}</span>
-                                <input v-else type="number" min="0" :value="t.duration_days" class="w-20 rounded border-gading-200 px-2 py-1 text-sm tabular-nums" @change="save(t, 'duration_days', Number($event.target.value))">
+                                <input v-else type="number" min="0" :value="t.duration_days" :disabled="!canEdit" class="w-20 rounded border-gading-200 px-2 py-1 text-sm tabular-nums" @change="save(t, 'duration_days', Number($event.target.value))">
                             </td>
                             <td class="whitespace-nowrap px-3 py-1.5 tabular-nums">{{ tanggal(t.start) }}</td>
                             <td class="whitespace-nowrap px-3 py-1.5 tabular-nums" :class="!t.is_summary && t.finish < today && t.percent_complete < 100 ? 'text-orange-600' : ''">{{ tanggal(t.finish) }}</td>
                             <td class="px-3 py-1.5">
-                                <input v-if="!t.is_summary" :value="t.predecessors" placeholder="mis. 1.2, 1.3+2" class="w-28 rounded border-gading-200 px-2 py-1 text-sm" @change="save(t, 'predecessors', $event.target.value)">
+                                <input v-if="!t.is_summary" :value="t.predecessors" :disabled="!canEdit" placeholder="mis. 1.2, 1.3+2" class="w-28 rounded border-gading-200 px-2 py-1 text-sm" @change="save(t, 'predecessors', $event.target.value)">
                             </td>
                             <td class="px-3 py-1.5">
                                 <span v-if="t.is_summary" class="tabular-nums">{{ t.percent_complete }}%</span>
-                                <input v-else type="number" min="0" max="100" step="5" :value="t.percent_complete" class="w-20 rounded border-gading-200 px-2 py-1 text-sm tabular-nums" @change="save(t, 'percent_complete', Number($event.target.value))">
+                                <input v-else type="number" min="0" max="100" step="5" :value="t.percent_complete" :disabled="!canEdit" class="w-20 rounded border-gading-200 px-2 py-1 text-sm tabular-nums" @change="save(t, 'percent_complete', Number($event.target.value))">
                             </td>
                             <td class="px-3 py-1.5">
                                 <select
                                     v-if="!t.is_summary"
+                                    :disabled="!canEdit"
                                     class="w-40 rounded border-gading-200 py-1 text-xs"
                                     :value="users.find((u) => u.name === t.assignees[0])?.id ?? ''"
                                     @change="router.patch(route('tasks.update', t.ulid), { assignee_ids: $event.target.value ? [Number($event.target.value)] : [] }, { preserveScroll: true })"
@@ -291,14 +299,14 @@ const kindLabel = { phase: terms.value.phase, work_package: terms.value.work_pac
                                 </select>
                             </td>
                             <td class="px-2">
-                                <button type="button" class="rounded p-1 text-slate-400 hover:bg-orange-50 hover:text-orange-600" title="Hapus" @click="remove(t)">✕</button>
+                                <button v-if="canEdit" type="button" class="rounded p-1 text-slate-400 hover:bg-orange-50 hover:text-orange-600" title="Hapus" @click="remove(t)">✕</button>
                             </td>
                         </tr>
                     </tbody>
                 </table>
             </div>
 
-            <form class="kartu mt-4 grid gap-3 p-4 sm:grid-cols-12 sm:items-end" @submit.prevent="addTask">
+            <form v-if="canEdit" class="kartu mt-4 grid gap-3 p-4 sm:grid-cols-12 sm:items-end" @submit.prevent="addTask">
                 <div class="sm:col-span-4">
                     <label class="label">Tambah unsur SRK</label>
                     <input v-model="newTask.title" type="text" class="masukan w-full" placeholder="Nama aktivitas" required>
@@ -330,12 +338,12 @@ const kindLabel = { phase: terms.value.phase, work_package: terms.value.work_pac
                 <button class="tombol justify-center sm:col-span-1" :disabled="newTask.processing">Tambah</button>
                 <p v-if="newTask.errors.predecessors || newTask.errors.title" class="text-sm text-orange-600 sm:col-span-12">{{ newTask.errors.predecessors || newTask.errors.title }}</p>
             </form>
-            <p class="mt-2 text-xs text-slate-500">Pendahulu ditulis dengan nomor SRK: "1.2" berarti mulai setelah 1.2 selesai, "1.2+3" dengan jeda 3 hari kerja.</p>
+            <p v-if="canEdit" class="mt-2 text-xs text-slate-500">Pendahulu ditulis dengan nomor SRK: "1.2" berarti mulai setelah 1.2 selesai, "1.2+3" dengan jeda 3 hari kerja.</p>
         </section>
 
         <!-- Gantt -->
         <section v-if="tab === 'gantt'" class="mt-6">
-            <ProjectGantt :tasks="tasks" :today="today" :fiscal-year-end="project.fiscal_year?.end_date" />
+            <ProjectGantt :tasks="tasks" :today="today" :fiscal-year-end="project.fiscal_year?.end_date" :editable="canEdit" />
         </section>
 
         <!-- Anggaran -->
@@ -345,7 +353,7 @@ const kindLabel = { phase: terms.value.phase, work_package: terms.value.work_pac
                     {{ terms.budget_document }}: <span class="font-semibold text-zamrud-950">{{ rupiah(budgetTotal) }}</span> ·
                     {{ terms.realization }}: <span class="font-semibold text-zamrud-950">{{ rupiah(realizedTotal) }}</span>
                 </p>
-                <Link :href="route('budget.import')" class="tombol-sekunder">{{ terms.budget_import }}</Link>
+                <Link v-if="permissions.import_budget" :href="route('budget.import')" class="tombol-sekunder">{{ terms.budget_import }}</Link>
             </div>
             <div class="kartu overflow-x-auto">
                 <table class="min-w-full text-sm">
@@ -379,7 +387,7 @@ const kindLabel = { phase: terms.value.phase, work_package: terms.value.work_pac
                                     <span v-if="l.amount" class="block text-xs text-slate-500">{{ persen((l.realized_total / l.amount) * 100, 1) }}</span>
                                 </td>
                                 <td class="px-3 py-2 text-right">
-                                    <button v-if="!l.children.length" type="button" class="text-xs font-semibold text-zamrud-700 hover:underline" @click="expenseFor = expenseFor?.id === l.id ? null : l">+ realisasi</button>
+                                    <button v-if="!l.children.length && permissions.record_expenditure" type="button" class="text-xs font-semibold text-zamrud-700 hover:underline" @click="expenseFor = expenseFor?.id === l.id ? null : l">+ realisasi</button>
                                 </td>
                             </tr>
                             <tr v-if="expenseFor?.id === l.id">
@@ -411,7 +419,7 @@ const kindLabel = { phase: terms.value.phase, work_package: terms.value.work_pac
 
         <!-- Dokumen -->
         <section v-if="tab === 'dokumen'" class="mt-6">
-            <ProjectDocuments :project="project" :documents="documents" :rules="documentRules" :tasks="tasks" :read-only="!!page.props.auth?.is_guest" />
+            <ProjectDocuments :project="project" :documents="documents" :rules="documentRules" :tasks="tasks" :read-only="!permissions.documents" />
         </section>
 
         <!-- Riwayat -->

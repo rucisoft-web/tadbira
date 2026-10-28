@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use App\Support\Access;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Hash;
@@ -11,8 +12,8 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Artisan::command('tadbira:pengguna', function () {
-    $this->table(['Surel', 'Nama', 'Organisasi'], User::with('organizations')->orderBy('email')->get()->map(fn ($u) => [
-        $u->email, $u->name, $u->organizations->pluck('name')->join(', '),
+    $this->table(['Surel', 'Nama', 'Organisasi (peran)'], User::with('organizations')->orderBy('email')->get()->map(fn ($u) => [
+        $u->email, $u->name, $u->organizations->map(fn ($o) => sprintf('%s (%s%s)', $o->short_name ?: $o->name, Access::roleLabel($o->pivot->role), $o->pivot->is_active ? '' : ', nonaktif'))->join(', '),
     ]));
 })->purpose('Daftar akun pengguna');
 

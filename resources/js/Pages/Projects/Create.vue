@@ -12,6 +12,8 @@ const props = defineProps({
     templates: Array,
     selectedTemplate: String,
     users: Array,
+    units: { type: Array, default: () => [] },
+    forcedCategory: { type: String, default: null },
 });
 
 const terms = computed(() => usePage().props.terms);
@@ -21,7 +23,7 @@ const tpl0 = props.templates.find((t) => t.ulid === props.selectedTemplate);
 const form = useForm({
     name: tpl0 ? tpl0.name : '',
     code: '',
-    category: tpl0?.category ?? '',
+    category: props.forcedCategory ?? tpl0?.category ?? '',
     description: '',
     fiscal_year: fy0?.ulid ?? '',
     template: props.selectedTemplate ?? '',
@@ -38,7 +40,7 @@ watch(() => form.template, (ulid) => {
     const t = props.templates.find((x) => x.ulid === ulid);
     if (t && (!form.name || props.templates.some((x) => x.name === form.name))) {
         form.name = t.name;
-        form.category = t.category ?? '';
+        form.category = props.forcedCategory ?? t.category ?? '';
     }
 });
 
@@ -155,7 +157,14 @@ const submit = () => form.post(route('projects.store'));
                 <div class="grid gap-4 sm:grid-cols-2">
                     <div>
                         <label class="label">{{ terms.work_unit }} / kategori</label>
-                        <input v-model="form.category" type="text" class="masukan w-full">
+                        <input v-if="forcedCategory" :value="forcedCategory" type="text" class="masukan w-full bg-gading-50" disabled>
+                        <template v-else>
+                            <input v-model="form.category" type="text" class="masukan w-full" list="daftar-unit">
+                            <datalist id="daftar-unit">
+                                <option v-for="u in units" :key="u.name" :value="u.name">{{ u.full_name }}</option>
+                            </datalist>
+                        </template>
+                        <p v-if="forcedCategory" class="mt-1 text-xs text-slate-500">Operator unit membuat kegiatan untuk unitnya sendiri.</p>
                     </div>
                     <div v-if="fy?.goals?.length">
                         <label class="label">{{ terms.goal }}</label>

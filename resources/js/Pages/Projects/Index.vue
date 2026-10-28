@@ -81,8 +81,8 @@ const selectFy = (ulid) => router.get(route('projects.index'), { ta: ulid });
                 <option value="absorption">Urut: serapan terendah</option>
             </select>
             <div class="ml-auto flex gap-2">
-                <Link :href="route('budget.import', { ta: fiscalYear?.ulid })" class="tombol-sekunder">{{ terms.budget_import }}</Link>
-                <Link :href="route('projects.create', { ta: fiscalYear?.ulid })" class="tombol">+ {{ terms.project }} baru</Link>
+                <Link v-if="$page.props.auth.access?.can.import_budget" :href="route('budget.import', { ta: fiscalYear?.ulid })" class="tombol-sekunder">{{ terms.budget_import }}</Link>
+                <Link v-if="$page.props.auth.access?.can.create_project" :href="route('projects.create', { ta: fiscalYear?.ulid })" class="tombol">+ {{ terms.project }} baru</Link>
             </div>
         </div>
 

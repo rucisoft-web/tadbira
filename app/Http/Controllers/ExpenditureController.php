@@ -13,7 +13,7 @@ class ExpenditureController extends Controller
     public function store(Request $request, BudgetLine $line): RedirectResponse
     {
         $project = $line->project;
-        $this->authorizeProject($request, $project);
+        $this->authorizeAbility($request, 'record_expenditure', $project);
         abort_if($project->fiscalYear?->isClosed(), 422, 'Tahun anggaran sudah ditutup.');
 
         $data = $request->validate([

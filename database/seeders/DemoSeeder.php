@@ -59,7 +59,8 @@ class DemoSeeder extends Seeder
 
         foreach ([$satker, $bumn] as $org) {
             $org->users()->attach($admin->id, ['role' => 'admin']);
-            $staff->each(fn ($u) => $org->users()->attach($u->id, ['role' => 'anggota']));
+            // Aisyah perencana, Budi keuangan, Fatimah pimpinan, Hasan dan Nurul operator.
+            $staff->values()->each(fn ($u, $i) => $org->users()->attach($u->id, ['role' => ['perencana', 'keuangan', 'pimpinan', 'operator', 'operator'][$i]]));
         }
         $admin->update(['current_organization_id' => $satker->id]);
 

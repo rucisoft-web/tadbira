@@ -12,12 +12,15 @@ const org = computed(() => page.props.organization);
 const flash = computed(() => page.props.flash?.success);
 const flashError = computed(() => page.props.flash?.error);
 const isGuest = computed(() => page.props.auth?.is_guest);
+const access = computed(() => page.props.auth?.access);
+const can = computed(() => access.value?.can ?? {});
 
 const nav = computed(() => [
     { label: 'Dasbor', route: 'dashboard', active: 'dashboard', icon: 'M3 13h8V3H3zm0 8h8v-6H3zm10 0h8V11h-8zm0-18v6h8V3z' },
     { label: terms.value.project ?? 'Proyek', route: 'projects.index', active: 'projects.*', icon: 'M4 6h10M8 12h12M6 18h8' },
-    { label: terms.value.budget_import ?? 'Impor anggaran', route: 'budget.import', active: 'budget.*', icon: 'M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2' },
-]);
+    can.value.import_budget && { label: terms.value.budget_import ?? 'Impor anggaran', route: 'budget.import', active: 'budget.*', icon: 'M12 3v12m0 0l-4-4m4 4l4-4M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2' },
+    can.value.settings && { label: 'Pengaturan', route: 'settings.organization', active: 'settings.*', icon: 'M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1.1-1.5 1.7 1.7 0 00-1.8.3l-.1.1a2 2 0 11-2.8-2.8l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1.1 1.7 1.7 0 00-.3-1.8l-.1-.1a2 2 0 112.8-2.8l.1.1a1.7 1.7 0 001.8.3H9a1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1a2 2 0 112.8 2.8l-.1.1a1.7 1.7 0 00-.3 1.8V9a1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z' },
+].filter(Boolean));
 
 const switchOrg = (ulid) => router.post(route('organizations.switch', ulid));
 </script>
@@ -38,6 +41,9 @@ const switchOrg = (ulid) => router.post(route('organizations.switch', ulid));
             <div v-if="org" class="mx-4 mb-4 rounded-xl border border-white/10 bg-white/5 p-3">
                 <p class="text-[10px] font-semibold uppercase tracking-widest text-emas-300">{{ org.sector_label }}</p>
                 <p class="mt-0.5 text-sm font-semibold leading-snug text-white">{{ org.name }}</p>
+                <p v-if="access && !isGuest" class="mt-1 text-xs text-zamrud-100/80">
+                    {{ access.role_label }}<span v-if="access.unit"> · {{ access.unit }}</span>
+                </p>
                 <div v-if="($page.props.organizations ?? []).length > 1" class="mt-2">
                     <select
                         class="w-full rounded-lg border-white/10 bg-zamrud-950/40 py-1 text-xs text-zamrud-50 focus:border-emas-400 focus:ring-emas-400"
@@ -98,6 +104,7 @@ const switchOrg = (ulid) => router.post(route('organizations.switch', ulid));
                         </template>
                         <template #content>
                             <DropdownLink :href="route('profile.edit')">Profil</DropdownLink>
+                            <DropdownLink v-if="can.settings" :href="route('settings.organization')">Pengaturan</DropdownLink>
                             <DropdownLink :href="route('logout')" method="post" as="button">Keluar</DropdownLink>
                         </template>
                     </Dropdown>

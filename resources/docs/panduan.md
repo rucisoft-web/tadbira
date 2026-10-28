@@ -345,14 +345,19 @@ Simpan pola ini sebagai templat agar unit lain memakai urutan yang sama. Untuk k
 
 ### Siapa melakukan apa
 
-| Peran | Tugas di Tadbira |
-| --- | --- |
-| Pimpinan | Melihat dasbor portofolio, kegiatan kritis, dan capaian sasaran. Memimpin rapat evaluasi bulanan. |
-| Perencana / Biro | Menyusun daftar kegiatan, mengimpor POK, mengaitkan kegiatan ke sasaran dan IKU, dan memverifikasi laporan. |
-| Keuangan | Mengunggah Laporan Ketersediaan Dana atau mencatat realisasi per akun setiap bulan. |
-| Penanggung jawab kegiatan | Menyusun jadwal aktivitas, menjaga ketergantungan, dan memastikan kegiatan selesai tepat waktu. |
-| Operator unit | Memperbarui persen selesai aktivitas dan mencatat kendala di unitnya. |
-| Admin | Mengatur organisasi, tahun anggaran, pengguna, dan templat kegiatan. |
+Setiap pengguna punya satu peran di organisasinya. Peran menentukan tugas sekaligus hak aksesnya di aplikasi; tombol yang tidak sesuai peran tidak ditampilkan.
+
+| Peran | Tugas di Tadbira | Hak akses |
+| --- | --- | --- |
+| Pimpinan | Melihat dasbor portofolio, kegiatan kritis, dan capaian sasaran. Memimpin rapat evaluasi bulanan. | Melihat semua; tidak mengubah data. |
+| Perencana / Biro | Menyusun daftar kegiatan, mengimpor POK, mengaitkan kegiatan ke sasaran dan IKU, dan memverifikasi laporan. | Mengubah semua kegiatan, membuat tahun anggaran, impor anggaran. |
+| Keuangan | Mengunggah Laporan Ketersediaan Dana atau mencatat realisasi per akun setiap bulan. | Impor anggaran dan realisasi, mencatat realisasi, mengunggah dokumen. |
+| Operator unit | Memperbarui persen selesai aktivitas, dokumen, dan kendala di unitnya. | Membuat dan mengubah kegiatan di unit kerjanya atau yang ia pimpin. |
+| Admin | Mengatur organisasi, pengguna, unit kerja, tahun anggaran, dan hari libur. | Semua, termasuk menu **Pengaturan**. |
+
+Penanggung jawab kegiatan bukan peran tersendiri: siapa pun yang ditunjuk memimpin sebuah kegiatan bisa mengubah kegiatan itu, walaupun kegiatannya ada di luar unitnya.
+
+![Pengaturan > Peran & hak akses](/images/panduan/16-peran.webp)
 
 ### Siklus pemantauan bulanan
 
@@ -368,11 +373,27 @@ Istikamah dalam praktik berarti pemantauan yang berkesinambungan dan diikuti tin
 
 **Mendaftarkan organisasi.** Di halaman masuk, klik **Daftarkan organisasi**. Isi nama Anda, nama organisasi, surel, dan kata sandi. Akun ini otomatis menjadi admin organisasi tersebut, dan tahun anggaran berjalan langsung dibuat.
 
-**Menambah tahun anggaran.** Di dasbor, klik **+ Tahun anggaran** di bilah atas.
+Semua pengaturan berikut ada di menu **Pengaturan** di bilah samping, yang hanya tampil untuk admin.
+
+**Profil organisasi.** Di **Pengaturan > Organisasi**, ubah nama, nama singkat, kode satker atau entitas, sektor, dan zona waktu. Sektor menentukan istilah yang dipakai di seluruh aplikasi.
+
+**Menambah pengguna.** Buka **Pengaturan > Pengguna**, klik **+ Tambah pengguna**, lalu isi nama, surel, peran, dan unit kerja. Kata sandi awal boleh dikosongkan; Tadbira membuatnya dan menampilkannya sekali. Sampaikan kata sandi itu langsung kepada yang bersangkutan. Bila surelnya sudah terdaftar (misalnya di organisasi lain), akun itu langsung ditambahkan dengan kata sandinya sendiri.
+
+![Pengaturan > Pengguna: peran, unit kerja, dan tindakan per akun](/images/panduan/15-pengguna.webp)
+
+**Mengubah peran, unit, dan status.** Di daftar pengguna, ganti peran atau unit langsung dari kotak pilihannya. **Nonaktifkan** menutup akses tanpa menghapus jejaknya, cocok untuk pegawai yang mutasi atau pensiun; **Keluarkan** mencabut keanggotaannya. Kegiatan dan riwayat yang pernah dibuatnya tetap tersimpan. Organisasi selalu harus punya minimal satu admin aktif, dan admin tidak bisa menurunkan perannya sendiri.
+
+**Setel ulang kata sandi.** Klik **Setel ulang sandi** pada baris pengguna. Kata sandi baru tampil sekali dan sesi lamanya ditutup. Untuk akun yang juga tergabung di organisasi lain, kata sandi hanya bisa diganti pemiliknya atau lewat terminal (lihat di bawah).
+
+**Unit kerja.** Di **Pengaturan > Unit kerja**, daftarkan fakultas, biro, direktorat, atau wilayah kerja. Nama singkat unit dipakai sebagai kategori kegiatan dan filter dasbor. Mengganti nama unit ikut memperbarui kategori semua kegiatannya. Operator unit hanya bisa mengubah kegiatan di unitnya.
+
+**Tahun anggaran.** Tambahkan tahun anggaran di **Pengaturan > Tahun anggaran** (atau **+ Tahun anggaran** di dasbor), lalu atur pagu, rentang tanggal, dan statusnya: Perencanaan, Berjalan, atau Ditutup. Tahun yang ditutup tidak menerima pencatatan realisasi lagi.
+
+**Hari libur.** Di **Pengaturan > Hari libur**, tambahkan libur khusus organisasi (misalnya dies natalis) atau hari kerja pengganti. Kegiatan berjalan yang melewati tanggal itu langsung dijadwalkan ulang.
 
 **Mengaktifkan mode tamu.** Di berkas `.env` server, isi `TADBIRA_GUEST_LOGIN=true`, lalu jalankan `php artisan optimize:clear`. Kartu data demo akan muncul di halaman masuk dan beranda. Isi `false` untuk menyembunyikannya.
 
-**Melihat daftar pengguna** (di terminal server, dalam folder aplikasi):
+**Melihat daftar pengguna lewat terminal** (di server, dalam folder aplikasi), misalnya saat tidak ada admin yang bisa masuk:
 
 ```bash
 php artisan tadbira:pengguna
@@ -380,17 +401,18 @@ php artisan tadbira:pengguna
 
 ### Lupa kata sandi
 
-Ada tiga jalan, dari yang paling mudah:
+Ada empat jalan, dari yang paling mudah:
 
 1. **Lewat surel.** Pengguna klik **Lupa kata sandi?** di halaman masuk. Cara ini membutuhkan pengaturan SMTP di `.env` (MAIL_MAILER, MAIL_HOST, MAIL_PORT, MAIL_USERNAME, MAIL_PASSWORD, MAIL_FROM_ADDRESS).
-2. **Diatur ulang admin lewat terminal.** Jika kata sandi tidak ditulis, aplikasi membuat kata sandi acak 12 karakter dan menampilkannya.
+2. **Disetel ulang admin di aplikasi.** Buka **Pengaturan > Pengguna**, lalu klik **Setel ulang sandi** pada baris pengguna tersebut.
+3. **Diatur ulang lewat terminal.** Jika kata sandi tidak ditulis, aplikasi membuat kata sandi acak 12 karakter dan menampilkannya.
 
 ```bash
 php artisan tadbira:reset-sandi pengguna@instansi.ac.id
 php artisan tadbira:reset-sandi pengguna@instansi.ac.id KataSandiBaru123
 ```
 
-3. **Versi lama tanpa perintah tadbira.** Gunakan tinker:
+4. **Versi lama tanpa perintah tadbira.** Gunakan tinker:
 
 ```bash
 php artisan tinker --execute="App\Models\User::where('email','pengguna@instansi.ac.id')->update(['password'=>bcrypt('KataSandiBaru123')]);"

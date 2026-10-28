@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Project;
 use App\Models\ProjectDocument;
+use App\Support\Access;
 use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,7 @@ class ProjectDocumentController extends Controller
 {
     public function store(Request $request, Project $project): RedirectResponse
     {
-        $this->authorizeProject($request, $project);
+        $this->authorizeAbility($request, 'documents', $project);
         $config = config('tadbira.documents');
 
         $data = $request->validate([
@@ -120,16 +121,24 @@ class ProjectDocumentController extends Controller
         return back()->with('success', 'Dokumen dihapus.');
     }
 
-    /** Hanya pengunggah, penanggung jawab kegiatan, atau admin organisasi yang boleh mengubah dan menghapus. */
+    /** Hanya pengunggah, penanggung jawab kegiatan, atau admin/perencana yang boleh mengubah dan menghapus. */
     private function authorizeChange(Request $request, ProjectDocument $document): void
     {
-        $user = $request->user();
-        $role = $user->organizations()->whereKey($document->project->organization_id)->value('role');
-
         abort_unless(
-            (int) $document->uploaded_by === (int) $user->id || (int) $document->project->leader_id === (int) $user->id || $role === 'admin',
+            self::canManage($this->access($request), $document),
             403,
-            'Hanya pengunggah, penanggung jawab kegiatan, atau admin yang dapat mengubah dokumen ini.',
+            'Hanya pengunggah, penanggung jawab kegiatan, admin, atau perencana yang dapat mengubah dokumen ini.',
+        );
+    }
+
+    public static function canManage(Access $access, ProjectDocument $document): bool
+    {
+        $uid = (int) $access->user->id;
+
+        return ! $access->user->isGuest() && (
+            (int) $document->uploaded_by === $uid
+            || (int) $document->project->leader_id === $uid
+            || $access->canOn('delete_project', $document->project)
         );
     }
 }

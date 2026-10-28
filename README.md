@@ -70,6 +70,10 @@ Tab **Dokumen** pada kegiatan menyimpan berkas digital (PDF, Word, Excel, PowerP
 
 Data demo berisi contoh dokumen (TOR, RAB, kontrak, BAST, laporan, notulen, foto) untuk setiap kegiatan, dibuat oleh `DemoDocumentSeeder`. Berkasnya dibaca bersama dari `resources/demo-dokumen` (disk `demo`) dan tidak ikut terhapus saat dokumen demo dihapus. Untuk mengisi ulang: `php artisan db:seed --class=DemoDocumentSeeder --force`.
 
+### Peran dan Pengaturan
+
+Peran per organisasi: **admin**, **pimpinan** (hanya melihat), **perencana**, **keuangan**, dan **operator unit** (hanya kegiatan di unit kerjanya atau yang ia pimpin). Hak akses tiap peran diatur di `config/tadbira.php` (`roles`) dan diperiksa oleh `App\Support\Access`. Admin mengelola profil organisasi, pengguna (tambah, ubah peran dan unit, nonaktifkan, setel ulang kata sandi), unit kerja, tahun anggaran, dan hari libur di menu **Pengaturan** (`/pengaturan`). Migrasi `2026_10_29_000006` mengubah peran lama "anggota" menjadi operator unit (bila semua kegiatan yang dipimpinnya ada di satu unit) atau perencana, dan membuat unit kerja dari kategori kegiatan.
+
 ### Panduan pengguna
 
 Halaman `/panduan` (submenu **Panduan** di landing page) menampilkan panduan lengkap dari `resources/docs/panduan.md`, dengan tangkapan layar di `public/images/panduan/`. Ubah berkas Markdown itu untuk memperbarui panduan; daftar bab dibuat otomatis dari judul `##`.

@@ -28,7 +28,7 @@ class Organization extends Model
 
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany(User::class)->withPivot('role');
+        return $this->belongsToMany(User::class)->withPivot(['role', 'unit_id', 'is_active']);
     }
 
     public function fiscalYears(): HasMany
@@ -39,6 +39,11 @@ class Organization extends Model
     public function projects(): HasMany
     {
         return $this->hasMany(Project::class);
+    }
+
+    public function units(): HasMany
+    {
+        return $this->hasMany(Unit::class)->orderBy('position')->orderBy('name');
     }
 
     public function holidays(): HasMany

@@ -31,7 +31,7 @@ class TemplateController extends Controller
 
     public function store(Request $request, Project $project, TemplateService $templates): RedirectResponse
     {
-        $this->authorizeProject($request, $project);
+        $this->authorizeAbility($request, 'edit_project', $project);
         $data = $request->validate([
             'name' => ['required', 'string', 'max:200'],
             'use_actual_durations' => ['boolean'],

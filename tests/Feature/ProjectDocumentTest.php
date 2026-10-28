@@ -32,7 +32,7 @@ class ProjectDocumentTest extends TestCase
         $this->admin = User::factory()->create(['current_organization_id' => $this->org->id]);
         $this->member = User::factory()->create(['current_organization_id' => $this->org->id]);
         $this->org->users()->attach($this->admin->id, ['role' => 'admin']);
-        $this->org->users()->attach($this->member->id, ['role' => 'anggota']);
+        $this->org->users()->attach($this->member->id, ['role' => 'keuangan']);
         $fy = $this->org->fiscalYears()->create([
             'year' => 2027, 'code' => 'TA 2027', 'start_date' => '2027-01-01', 'end_date' => '2027-12-31', 'status' => 'active',
         ]);
@@ -91,7 +91,7 @@ class ProjectDocumentTest extends TestCase
         $this->actingAs($this->member)->get(route('documents.show', ['document' => $doc->ulid, 'lihat' => 1]))
             ->assertOk()->assertHeader('Content-Security-Policy');
 
-        // Anggota biasa tidak boleh menghapus berkas unggahan orang lain.
+        // Peran keuangan tidak boleh menghapus berkas unggahan orang lain.
         $this->actingAs($this->member)->delete(route('documents.destroy', $doc->ulid))->assertForbidden();
 
         $this->actingAs($this->admin)->delete(route('documents.destroy', $doc->ulid))->assertRedirect();

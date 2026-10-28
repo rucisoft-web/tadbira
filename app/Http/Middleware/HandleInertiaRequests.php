@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Access;
 use App\Support\Terminology;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -35,6 +36,7 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user()?->only(['id', 'name', 'email']),
                 'is_guest' => (bool) $request->user()?->isGuest(),
+                'access' => fn () => $request->user() ? Access::for($request->user())->toArray() : null,
             ],
             'organization' => function () use ($request) {
                 $org = $request->user()?->activeOrganization();
@@ -48,7 +50,7 @@ class HandleInertiaRequests extends Middleware
                     'is_government' => $org->isGovernment(),
                 ] : null;
             },
-            'organizations' => fn () => $request->user()?->organizations()->get(['organizations.ulid', 'organizations.name'])->map->only(['ulid', 'name']),
+            'organizations' => fn () => $request->user()?->activeOrganizations()->get(['organizations.ulid', 'organizations.name'])->map->only(['ulid', 'name']),
             'terms' => fn () => ($request->user()?->activeOrganization()?->terminology() ?? new Terminology)->all(),
             'flash' => [
                 'success' => fn () => $request->session()->get('success'),

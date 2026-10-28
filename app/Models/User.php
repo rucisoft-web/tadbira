@@ -26,6 +26,7 @@ class User extends Authenticatable
         'password',
         'current_organization_id',
         'capacity_hours_per_day',
+        'last_login_at',
     ];
 
     /**
@@ -48,12 +49,19 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'last_login_at' => 'datetime',
         ];
     }
 
     public function organizations(): BelongsToMany
     {
-        return $this->belongsToMany(Organization::class)->withPivot('role');
+        return $this->belongsToMany(Organization::class)->withPivot(['role', 'unit_id', 'is_active']);
+    }
+
+    /** Keanggotaan yang tidak dinonaktifkan admin. */
+    public function activeOrganizations(): BelongsToMany
+    {
+        return $this->organizations()->wherePivot('is_active', true);
     }
 
     public function currentOrganization(): BelongsTo
@@ -68,17 +76,14 @@ class User extends Authenticatable
     {
         // Akun tamu dipakai bersama; pilihan organisasinya disimpan per sesi, bukan di basis data.
         if ($this->isGuest() && ($id = session('guest_organization_id'))) {
-            $org = $this->organizations()->whereKey($id)->first();
+            $org = $this->activeOrganizations()->whereKey($id)->first();
             if ($org) {
                 return $org;
             }
         }
 
-        if ($this->current_organization_id && $this->organizations()->whereKey($this->current_organization_id)->exists()) {
-            return $this->currentOrganization;
-        }
-
-        return $this->organizations()->orderBy('organizations.id')->first();
+        return $this->activeOrganizations()->orderByRaw('organizations.id = ? desc', [(int) $this->current_organization_id])
+            ->orderBy('organizations.id')->first();
     }
 
     /** Akun tamu bila fitur masuk sebagai tamu diaktifkan dan akunnya ada. */

@@ -94,7 +94,20 @@ class PtkinDemoSeeder extends Seeder
 
         $goals = $this->goals($org, $fy, $data);
 
+        // Contoh akun per peran: pimpinan, perencana, dan keuangan.
+        foreach (['pimpinan' => 'Pimpinan', 'perencana' => 'Perencana', 'keuangan' => 'Keuangan'] as $role => $label) {
+            $account = User::firstOrCreate(
+                ['email' => $role.'@'.$data['organization']['email_domain']],
+                ['name' => "{$label} {$data['organization']['short_name']}", 'password' => Hash::make('password'), 'email_verified_at' => now()],
+            );
+            $org->users()->attach($account->id, ['role' => $role]);
+        }
+
         $n = 0;
+        foreach (array_keys($data['units']) as $pos => $unit) {
+            $org->units()->create(['name' => $unit, 'full_name' => $data['units'][$unit][0], 'position' => $pos]);
+        }
+        $units = $org->units()->pluck('id', 'name');
         foreach ($data['units'] as $unit => $unitData) {
             // [nama unit, kegiatan, awalan kode?]
             [$unitName, $activities] = $unitData;
@@ -103,7 +116,7 @@ class PtkinDemoSeeder extends Seeder
                 ['email' => Str::lower($prefix).'@'.$data['organization']['email_domain']],
                 ['name' => "Operator {$unit}", 'password' => Hash::make('password'), 'email_verified_at' => now()],
             );
-            $org->users()->attach($operator->id, ['role' => 'anggota']);
+            $org->users()->attach($operator->id, ['role' => 'operator', 'unit_id' => $units[$unit]]);
 
             foreach ($activities as $i => $activity) {
                 // [nama, jenis, kode sasaran, anggaran, sumber dana, jadwal [mulai, selesai]?, kode?]

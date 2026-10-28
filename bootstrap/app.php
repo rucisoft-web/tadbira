@@ -17,7 +17,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\ReadOnlyGuest::class,
         ]);
 
-        //
+        $middleware->alias(['can.tadbira' => \App\Http\Middleware\EnsureCan::class]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

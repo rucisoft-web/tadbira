@@ -50,6 +50,17 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        $user = Auth::user();
+        // Akun yang semua keanggotaannya dinonaktifkan admin tidak bisa masuk.
+        if ($user->organizations()->exists() && ! $user->activeOrganizations()->exists()) {
+            Auth::guard('web')->logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'Akun Anda dinonaktifkan oleh admin organisasi. Hubungi admin untuk mengaktifkannya kembali.',
+            ]);
+        }
+        $user->forceFill(['last_login_at' => now()])->saveQuietly();
+
         RateLimiter::clear($this->throttleKey());
     }
 

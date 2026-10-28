@@ -78,13 +78,13 @@ const createFy = () => fyForm.post(route('fiscal-years.store'), { onSuccess: () 
                     <option value="">Semua {{ terms.work_unit?.toLowerCase() }}</option>
                     <option v-for="u in props.units" :key="u" :value="u">{{ u }}</option>
                 </select>
-                <button type="button" class="text-xs font-semibold text-zamrud-700 hover:underline" @click="showNewFy = !showNewFy">
+                <button v-if="$page.props.auth.access?.can.fiscal_years" type="button" class="text-xs font-semibold text-zamrud-700 hover:underline" @click="showNewFy = !showNewFy">
                     + {{ terms.fiscal_year }}
                 </button>
             </div>
         </template>
 
-        <form v-if="showNewFy || !fiscalYear" class="kartu mb-6 flex flex-wrap items-end gap-4 p-5" @submit.prevent="createFy">
+        <form v-if="$page.props.auth.access?.can.fiscal_years && (showNewFy || !fiscalYear)" class="kartu mb-6 flex flex-wrap items-end gap-4 p-5" @submit.prevent="createFy">
             <div>
                 <label class="label">{{ terms.fiscal_year }}</label>
                 <input v-model="fyForm.year" type="number" class="masukan w-32">
@@ -110,8 +110,8 @@ const createFy = () => fyForm.post(route('fiscal-years.store'), { onSuccess: () 
                         </p>
                     </div>
                     <div class="flex gap-2">
-                        <Link :href="route('projects.create', { ta: fiscalYear.ulid })" class="tombol bg-emas-500 text-zamrud-950 hover:bg-emas-400">+ {{ terms.project }} baru</Link>
-                        <Link :href="route('budget.import', { ta: fiscalYear.ulid })" class="tombol-sekunder border-white/20 bg-white/10 text-white hover:bg-white/20">{{ terms.budget_import }}</Link>
+                        <Link v-if="$page.props.auth.access?.can.create_project" :href="route('projects.create', { ta: fiscalYear.ulid })" class="tombol bg-emas-500 text-zamrud-950 hover:bg-emas-400">+ {{ terms.project }} baru</Link>
+                        <Link v-if="$page.props.auth.access?.can.import_budget" :href="route('budget.import', { ta: fiscalYear.ulid })" class="tombol-sekunder border-white/20 bg-white/10 text-white hover:bg-white/20">{{ terms.budget_import }}</Link>
                     </div>
                 </div>
                 <div class="relative mt-5 space-y-1.5">

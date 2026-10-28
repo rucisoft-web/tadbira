@@ -25,6 +25,10 @@ class FiscalYearController extends Controller
             'ceiling_amount' => $data['ceiling_amount'] ?? null,
         ]);
 
+        if ($request->boolean('kembali')) {
+            return back()->with('success', "{$fy->code} dibuat.");
+        }
+
         return redirect()->route('dashboard', ['ta' => $fy->ulid])->with('success', "{$fy->code} dibuat.");
     }
 }
