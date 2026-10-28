@@ -143,6 +143,29 @@ const sectors = [
                 </div>
             </section>
 
+            <!-- Landasan nilai -->
+            <section id="nilai" class="scroll-mt-20 py-16">
+                <div class="mx-auto grid max-w-6xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-2">
+                    <figure class="overflow-hidden rounded-2xl border border-gading-200 bg-white shadow-sm">
+                        <img src="/images/panduan/00-peta-manajemen-proyek.webp" alt="Peta manajemen proyek: istikamah di pusat, empat sifat kenabian, delapan bidang pengetahuan, diikat integrasi" width="1254" height="1254" loading="lazy" class="h-auto w-full">
+                    </figure>
+                    <div>
+                        <p class="text-sm font-semibold uppercase tracking-wider text-emas-700">Landasan nilai</p>
+                        <h2 class="mt-2 text-3xl font-bold text-zamrud-950">Manajemen proyek yang berakar pada empat sifat kenabian.</h2>
+                        <p class="mt-4 text-slate-600">
+                            Tadbira disusun mengikuti peta dalam buku <i>Catatan Kecil Manajer Proyek</i>: sembilan bidang pengetahuan manajemen proyek (PMBOK) dikelompokkan di bawah empat sifat kenabian, dengan istikamah di pusatnya dan integrasi sebagai pengikat.
+                        </p>
+                        <ul class="mt-6 space-y-3 text-sm">
+                            <li><b class="text-zamrud-900">Shiddiq</b>: lingkup dan jadwal yang jujur, lewat SRK, Gantt, jalur kritis, dan baseline.</li>
+                            <li><b class="text-zamrud-900">Amanah</b>: biaya dan kualitas yang dapat dipertanggungjawabkan, lewat anggaran, realisasi, nilai hasil, dan dokumen bukti.</li>
+                            <li><b class="text-zamrud-900">Tabligh</b>: personalia dan komunikasi yang jelas, lewat penanggung jawab, beban kerja, dan laporan status.</li>
+                            <li><b class="text-zamrud-900">Fathanah</b>: risiko dan pengadaan yang dibaca sejak dini, lewat register risiko dan tahapan pengadaan.</li>
+                            <li><b class="text-zamrud-900">Istikamah dan integrasi</b>: pemantauan rutin di satu dasbor dan kendali perubahan yang tercatat.</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
             <!-- Waktu pimpinan -->
             <section class="py-16">
                 <div class="mx-auto max-w-6xl px-4 sm:px-6">

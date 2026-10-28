@@ -12,6 +12,8 @@ Buku tersebut menyusun sembilan bidang pengetahuan manajemen proyek (mengikuti P
 | Tabligh (menyampaikan) | SDM, Komunikasi | Penanggung jawab, beban kerja, sasaran & IKU, laporan status cetak, ekspor Excel |
 | Fathanah (cerdas) | Risiko, Pengadaan | Register risiko dan isu, matriks 5×5, kesehatan kegiatan (SPI), tahapan pengadaan |
 
+![Peta manajemen proyek: istikamah di pusat, empat sifat kenabian (tabligh, amanah, fathanah, shiddiq) dengan bidang pengetahuannya, diikat oleh integrasi](/images/panduan/00-peta-manajemen-proyek.webp)
+
 Cara membaca panduan ini: mulai dari bab Memulai untuk masuk ke aplikasi, lalu baca bab per bidang sesuai peran Anda. Pengguna baru bisa mencoba semua langkah tanpa akun lewat Mode tamu dengan tiga data demo (UIN Sunan Kalijaga, MedcoEnergi, UNJ).
 
 Pimpinan yang hanya butuh gambaran manfaatnya bisa mulai dari halaman [Tadbira untuk eksekutif](/untuk-eksekutif): ringkas, tanpa langkah teknis.
