@@ -55,6 +55,7 @@ const selectFy = (ulid) => router.get(route('projects.index'), { ta: ulid });
                 <select class="masukan py-1.5" :value="fiscalYear?.ulid" @change="selectFy($event.target.value)">
                     <option v-for="fy in fiscalYears" :key="fy.ulid" :value="fy.ulid">{{ fy.code }}</option>
                 </select>
+                <a v-if="fiscalYear" :href="route('portfolio.export', { ta: fiscalYear.ulid })" class="ml-auto text-xs font-semibold text-zamrud-700 hover:underline">Unduh Excel</a>
             </div>
         </template>
 

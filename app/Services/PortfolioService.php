@@ -8,6 +8,7 @@ use App\Models\Goal;
 use App\Models\GoalIndicator;
 use App\Models\Project;
 use App\Models\Task;
+use App\Services\Performance\EarnedValue;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 
@@ -28,7 +29,7 @@ class PortfolioService
             ->when($unit, fn ($q) => $q->where('category', $unit))
             ->with(['leader:id,name', 'tasks' => fn ($q) => $q->select([
                 'id', 'project_id', 'parent_id', 'kind', 'title', 'duration_days', 'start_date', 'finish_date',
-                'percent_complete', 'is_critical', 'status', 'wbs_code',
+                'percent_complete', 'is_critical', 'status', 'wbs_code', 'baseline_start', 'baseline_finish', 'baseline_duration',
             ])])
             ->orderBy('computed_start_date')
             ->get();
@@ -42,6 +43,15 @@ class PortfolioService
             ->pluck('total', 'project_id');
 
         $rows = $projects->map(fn (Project $p) => $this->projectRow($p, $today, (float) ($realized[$p->id] ?? 0)));
+        $evm = EarnedValue::compute(
+            (float) $rows->sum(fn ($r) => $r['evm']['bac']),
+            0, 0, (float) $rows->sum(fn ($r) => $r['evm']['ac']),
+        );
+        $pv = (float) $rows->sum(fn ($r) => $r['evm']['pv']);
+        $ev = (float) $rows->sum(fn ($r) => $r['evm']['ev']);
+        $portfolioEvm = $evm['bac'] > 0
+            ? EarnedValue::compute($evm['bac'], $pv / $evm['bac'] * 100, $ev / $evm['bac'] * 100, $evm['ac'])
+            : $evm;
 
         return [
             'projects' => $rows->values(),
@@ -54,6 +64,8 @@ class PortfolioService
                 'avg_planned' => round($rows->avg('planned') ?? 0, 1),
                 'late_tasks' => $rows->sum('late_tasks'),
                 'beyond_fiscal_year' => $rows->where('beyond_fiscal_year', true)->count(),
+                'evm' => $portfolioEvm,
+                'baselined' => $rows->where('has_baseline', true)->count(),
             ],
             'by_status' => collect(Project::STATUSES)
                 ->map(fn ($label, $key) => ['key' => $key, 'label' => $label, 'count' => $rows->where('status', $key)->count()])
@@ -129,7 +141,9 @@ class PortfolioService
     {
         $tasks = $p->tasks;
         $leaves = $tasks->filter(fn (Task $t) => ! $tasks->contains('parent_id', $t->id));
-        $planned = $this->plannedPercent($leaves, $today);
+        $hasBaseline = $p->baseline_number > 0;
+        // Rencana dibandingkan dengan baseline bila sudah ditetapkan, selain itu dengan jadwal berjalan.
+        $planned = $this->plannedPercent($leaves, $today, $hasBaseline);
         $progress = (float) $p->percent_complete;
 
         $lateTasks = $leaves->filter(fn (Task $t) => $t->finish_date && $t->finish_date->lt($today) && $t->percent_complete < 100)->count();
@@ -144,6 +158,7 @@ class PortfolioService
 
         $finish = $p->computed_finish_date;
         $fyEnd = $p->fiscalYear?->end_date;
+        $bac = $hasBaseline && $p->baseline_budget !== null ? (float) $p->baseline_budget : (float) $p->budget_amount;
 
         return [
             'ulid' => $p->ulid,
@@ -168,6 +183,10 @@ class PortfolioService
             'critical_tasks' => $leaves->where('is_critical', true)->count(),
             'task_count' => $leaves->count(),
             'beyond_fiscal_year' => $finish && $fyEnd && $finish->gt($fyEnd),
+            'has_baseline' => $hasBaseline,
+            'baseline_finish' => $p->baseline_finish?->toDateString(),
+            'finish_variance' => $hasBaseline && $finish && $p->baseline_finish ? (int) $p->baseline_finish->diffInDays($finish, false) : null,
+            'evm' => EarnedValue::compute($bac, $planned, $progress, $realized),
             'phases' => $tasks->whereNull('parent_id')->where('kind', '!=', 'activity')->values()->map(fn (Task $t) => [
                 'title' => $t->title,
                 'start' => $t->start_date?->toDateString(),
@@ -186,21 +205,23 @@ class PortfolioService
      * Kemajuan rencana per hari ini: bagian lama pengerjaan yang semestinya sudah berlalu,
      * ditimbang lama pengerjaan (pendekatan hari kalender).
      */
-    public function plannedPercent(Collection $leaves, CarbonImmutable $today): float
+    public function plannedPercent(Collection $leaves, CarbonImmutable $today, bool $baseline = false): float
     {
         $weight = 0;
         $sum = 0;
         foreach ($leaves as $t) {
-            if (! $t->start_date || ! $t->finish_date) {
+            $start = $baseline ? ($t->baseline_start ?? $t->start_date) : $t->start_date;
+            $finish = $baseline ? ($t->baseline_finish ?? $t->finish_date) : $t->finish_date;
+            if (! $start || ! $finish) {
                 continue;
             }
-            $w = max(1, $t->duration_days);
+            $w = max(1, $baseline ? ($t->baseline_duration ?? $t->duration_days) : $t->duration_days);
             $weight += $w;
-            if ($today->gte($t->finish_date)) {
+            if ($today->gte($finish)) {
                 $sum += $w * 100;
-            } elseif ($today->gt($t->start_date)) {
-                $span = max(1, $t->start_date->diffInDays($t->finish_date) + 1);
-                $sum += $w * 100 * min(1, $t->start_date->diffInDays($today) / $span);
+            } elseif ($today->gt($start)) {
+                $span = max(1, $start->diffInDays($finish) + 1);
+                $sum += $w * 100 * min(1, $start->diffInDays($today) / $span);
             }
         }
 

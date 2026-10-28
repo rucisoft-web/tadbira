@@ -106,6 +106,34 @@ class SchedulerTest extends TestCase
         $this->assertTrue($r->tasks[10]['critical']);
     }
 
+    public function test_start_to_start_finish_to_finish_and_start_to_finish(): void
+    {
+        // 1: 5 hari mulai Senin 1 Mar 2027 → Jumat 5 Mar.
+        $nodes = [$this->node(1, 5), $this->node(2, 3), $this->node(3, 2), $this->node(4, 3)];
+        $edges = [
+            ['predecessor' => 1, 'successor' => 2, 'type' => 'SS', 'lag' => 2],
+            ['predecessor' => 1, 'successor' => 3, 'type' => 'FF', 'lag' => 1],
+            ['predecessor' => 1, 'successor' => 4, 'type' => 'SF', 'lag' => 5],
+        ];
+
+        $r = (new Scheduler(new WorkingCalendar))->run($nodes, $edges, 'forward', '2027-03-01');
+
+        // SS+2: mulai 2 hari kerja setelah 1 mulai.
+        $this->assertSame('2027-03-03', $r->tasks[2]['start']->toDateString());
+        // FF+1: selesai 1 hari kerja setelah 1 selesai (Senin 8 Mar), jadi mulai Jumat 5 Mar.
+        $this->assertSame('2027-03-08', $r->tasks[3]['finish']->toDateString());
+        $this->assertSame('2027-03-05', $r->tasks[3]['start']->toDateString());
+        // SF+5: selesai paling cepat sebelum hari kerja ke-5 setelah 1 mulai (Jumat 5 Mar).
+        $this->assertSame('2027-03-05', $r->tasks[4]['finish']->toDateString());
+        $this->assertSame('2027-03-03', $r->tasks[4]['start']->toDateString());
+
+        // Jalur kritis: 1 lalu 3 (FF) menentukan akhir proyek.
+        $this->assertSame('2027-03-08', $r->projectFinish->toDateString());
+        $this->assertTrue($r->tasks[3]['critical']);
+        $this->assertTrue($r->tasks[1]['critical']);
+        $this->assertFalse($r->tasks[2]['critical']);
+    }
+
     public function test_cycle_is_rejected(): void
     {
         $this->expectException(ScheduleCycleException::class);

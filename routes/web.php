@@ -1,6 +1,11 @@
 <?php
 
 use App\Http\Controllers\BudgetImportController;
+use App\Http\Controllers\Control\BaselineController;
+use App\Http\Controllers\Control\ChangeRequestController;
+use App\Http\Controllers\Control\ReportController;
+use App\Http\Controllers\Control\RiskController;
+use App\Http\Controllers\Control\WorkloadController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\ExpenditureController;
 use App\Http\Controllers\FiscalYearController;
@@ -58,6 +63,18 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dokumen/{document}', [ProjectDocumentController::class, 'show'])->name('documents.show');
     Route::patch('/dokumen/{document}', [ProjectDocumentController::class, 'update'])->name('documents.update');
     Route::delete('/dokumen/{document}', [ProjectDocumentController::class, 'destroy'])->name('documents.destroy');
+
+    Route::get('/proyek/{project}/laporan', [ReportController::class, 'status'])->name('projects.report');
+    Route::get('/proyek/{project}/excel', [ReportController::class, 'project'])->name('projects.export');
+    Route::get('/beban-kerja', WorkloadController::class)->name('workload');
+    Route::get('/portofolio/excel', [ReportController::class, 'portfolio'])->name('portfolio.export');
+    Route::post('/proyek/{project}/baseline', [BaselineController::class, 'store'])->name('baseline.store');
+    Route::post('/proyek/{project}/risiko', [RiskController::class, 'store'])->name('risks.store');
+    Route::patch('/risiko/{risk}', [RiskController::class, 'update'])->name('risks.update');
+    Route::delete('/risiko/{risk}', [RiskController::class, 'destroy'])->name('risks.destroy');
+    Route::post('/proyek/{project}/perubahan', [ChangeRequestController::class, 'store'])->name('changes.store');
+    Route::post('/perubahan/{changeRequest}/keputusan', [ChangeRequestController::class, 'decide'])->name('changes.decide');
+    Route::post('/perubahan/{changeRequest}/tarik', [ChangeRequestController::class, 'withdraw'])->name('changes.withdraw');
 
     Route::post('/proyek/{project}/aktivitas', [TaskController::class, 'store'])->name('tasks.store');
     Route::patch('/aktivitas/{task}', [TaskController::class, 'update'])->name('tasks.update');

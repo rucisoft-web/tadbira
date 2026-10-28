@@ -111,6 +111,7 @@ class ProjectScheduler
             'predecessor' => $d->predecessor_id,
             'successor' => $d->successor_id,
             'lag' => $d->lag_days,
+            'type' => $d->type ?: 'FS',
         ])->all();
 
         return [$nodes, $edges];

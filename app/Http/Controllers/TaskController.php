@@ -139,7 +139,7 @@ class TaskController extends Controller
         $rows = $this->predecessors->parse($project, $task, $text);
         TaskDependency::where('successor_id', $task->id)->delete();
         foreach ($rows as $r) {
-            TaskDependency::create($r + ['project_id' => $project->id, 'successor_id' => $task->id, 'type' => 'FS']);
+            TaskDependency::create($r + ['project_id' => $project->id, 'successor_id' => $task->id]);
         }
     }
 

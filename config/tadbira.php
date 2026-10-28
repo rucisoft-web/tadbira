@@ -26,17 +26,17 @@ return [
         'admin' => [
             'label' => 'Admin',
             'description' => 'Mengatur organisasi, pengguna, unit kerja, tahun anggaran, dan hari libur. Bisa melakukan semua hal.',
-            'can' => ['settings' => true, 'fiscal_years' => true, 'create_project' => true, 'edit_project' => true, 'delete_project' => true, 'documents' => true, 'import_budget' => true, 'record_expenditure' => true],
+            'can' => ['settings' => true, 'fiscal_years' => true, 'create_project' => true, 'edit_project' => true, 'delete_project' => true, 'documents' => true, 'import_budget' => true, 'record_expenditure' => true, 'approve_change' => true],
         ],
         'pimpinan' => [
             'label' => 'Pimpinan',
-            'description' => 'Melihat dasbor, semua kegiatan, anggaran, dan dokumen. Tidak mengubah data.',
-            'can' => [],
+            'description' => 'Melihat dasbor, semua kegiatan, anggaran, dan dokumen, serta memutuskan permintaan perubahan. Tidak mengubah data kegiatan.',
+            'can' => ['approve_change' => true],
         ],
         'perencana' => [
             'label' => 'Perencana',
             'description' => 'Menyusun dan mengubah semua kegiatan, membuat tahun anggaran, mengimpor POK/RAB, dan memverifikasi.',
-            'can' => ['fiscal_years' => true, 'create_project' => true, 'edit_project' => true, 'delete_project' => true, 'documents' => true, 'import_budget' => true, 'record_expenditure' => true],
+            'can' => ['fiscal_years' => true, 'create_project' => true, 'edit_project' => true, 'delete_project' => true, 'documents' => true, 'import_budget' => true, 'record_expenditure' => true, 'approve_change' => true],
         ],
         'keuangan' => [
             'label' => 'Keuangan',
@@ -54,11 +54,12 @@ return [
     'abilities' => [
         'view' => 'Melihat dasbor, kegiatan, anggaran, dan dokumen',
         'create_project' => 'Membuat kegiatan baru',
-        'edit_project' => 'Mengubah jadwal, aktivitas, dan kemajuan',
+        'edit_project' => 'Mengubah jadwal, aktivitas, kemajuan, risiko, dan mengajukan perubahan',
         'documents' => 'Mengunggah dokumen kegiatan',
         'delete_project' => 'Menghapus kegiatan',
         'import_budget' => 'Mengimpor POK/RAB dan laporan realisasi',
         'record_expenditure' => 'Mencatat realisasi per akun',
+        'approve_change' => 'Memutuskan permintaan perubahan dan menetapkan ulang baseline',
         'fiscal_years' => 'Membuat tahun anggaran',
         'settings' => 'Membuka menu Pengaturan',
     ],

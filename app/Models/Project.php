@@ -37,6 +37,10 @@ class Project extends Model
         'percent_complete' => 'float',
         'budget_amount' => 'float',
         'is_template' => 'boolean',
+        'baseline_start' => 'date:Y-m-d',
+        'baseline_finish' => 'date:Y-m-d',
+        'baseline_budget' => 'float',
+        'baseline_at' => 'datetime',
     ];
 
     public function uniqueIds(): array
@@ -97,6 +101,26 @@ class Project extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(ProjectDocument::class)->latest();
+    }
+
+    public function risks(): HasMany
+    {
+        return $this->hasMany(ProjectRisk::class);
+    }
+
+    public function baselineBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'baseline_by');
+    }
+
+    public function changeRequests(): HasMany
+    {
+        return $this->hasMany(ChangeRequest::class)->orderByDesc('number');
+    }
+
+    public function hasBaseline(): bool
+    {
+        return $this->baseline_number > 0;
     }
 
     public function budgetLines(): HasMany

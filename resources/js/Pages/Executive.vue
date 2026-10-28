@@ -56,7 +56,7 @@ const questions = [
 ];
 
 const benefits = [
-    { title: 'Keputusan lebih awal', text: 'Masalah terlihat saat masih bisa diperbaiki, bukan saat rapat evaluasi akhir tahun.' },
+    { title: 'Keputusan lebih awal', text: 'Indeks jadwal dan biaya, perkiraan biaya akhir, risiko utama, dan permintaan perubahan tampil di dasbor, saat masalah masih bisa diperbaiki, bukan saat rapat evaluasi akhir tahun.' },
     { title: 'Serapan lebih merata', text: 'Jadwal yang terhubung dengan anggaran mendorong kegiatan bergerak sejak awal tahun, bukan menumpuk di Desember.' },
     { title: 'Rapat lebih singkat', text: 'Semua peserta melihat angka yang sama. Rapat bulanan membahas keputusan, bukan menyamakan data.' },
     { title: 'Siap diperiksa', text: 'Kemajuan, realisasi, dokumen bukti, dan riwayat perubahan tersimpan rapi untuk SAKIP, auditor internal, BPK, atau komite audit.' },
@@ -73,7 +73,7 @@ const routine = [
 const shots = [
     { src: '/images/panduan/02b-dasbor-grafik.webp', title: 'Serapan per unit dan kurva S', w: 1110, h: 740 },
     { src: '/images/panduan/02c-sasaran.webp', title: 'Sasaran program dan IKU', w: 1110, h: 1360 },
-    { src: '/images/panduan/02d-kemajuan.webp', title: 'Kemajuan kegiatan dibanding rencana', w: 1110, h: 940 },
+    { src: '/images/panduan/22-dasbor-kendali.webp', title: 'Kinerja biaya, risiko utama, dan perubahan', w: 1110, h: 590 },
     { src: '/images/panduan/14-dokumen.webp', title: 'Dokumen bukti per kegiatan', w: 1110, h: 860 },
 ];
 

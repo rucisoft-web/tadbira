@@ -39,6 +39,8 @@ class Task extends Model
         'finish_date' => 'date:Y-m-d',
         'late_start' => 'date:Y-m-d',
         'late_finish' => 'date:Y-m-d',
+        'baseline_start' => 'date:Y-m-d',
+        'baseline_finish' => 'date:Y-m-d',
         'actual_start' => 'date:Y-m-d',
         'actual_finish' => 'date:Y-m-d',
         'is_critical' => 'boolean',

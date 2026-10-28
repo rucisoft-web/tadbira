@@ -107,6 +107,7 @@ final class Access
             'documents' => $this->canOn('documents', $project),
             'import_budget' => $this->can('import_budget'),
             'record_expenditure' => $this->canOn('record_expenditure', $project),
+            'approve_change' => $this->canOn('approve_change', $project),
         ];
     }
 }

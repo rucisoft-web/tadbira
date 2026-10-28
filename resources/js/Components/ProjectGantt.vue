@@ -13,6 +13,8 @@ const props = defineProps({
 const scales = { hari: 28, minggu: 12, bulan: 4 };
 const scale = ref('minggu');
 const showCritical = ref(true);
+const showBaseline = ref(true);
+const hasBaseline = computed(() => props.tasks.some((t) => t.baseline_start));
 const rowH = 36;
 const DAY = 86400000;
 
@@ -69,16 +71,22 @@ const arrows = computed(() => {
     const out = [];
     for (const b of bars.value) {
         if (!b) continue;
-        for (const pid of b.predecessor_ids || []) {
+        const links = b.predecessor_links ?? (b.predecessor_ids || []).map((id) => ({ id, type: 'FS' }));
+        for (const { id: pid, type } of links) {
             const p = bars.value[rowIndex.value[pid]];
             if (!p) continue;
-            const x1 = p.kind === 'milestone' ? p.left + 6 : p.left + p.w;
+            // Ujung yang dihubungkan mengikuti jenis urutan: S = mulai (kiri), F = selesai (kanan).
+            const fromStart = type === 'SS' || type === 'SF';
+            const toFinish = type === 'FF' || type === 'SF';
+            const x1 = p.kind === 'milestone' ? p.left + (fromStart ? -6 : 6) : fromStart ? p.left : p.left + p.w;
             const y1 = p.y + rowH / 2;
-            const x2 = b.kind === 'milestone' ? b.left - 6 : b.left;
+            const x2 = b.kind === 'milestone' ? b.left + (toFinish ? 6 : -6) : toFinish ? b.left + b.w : b.left;
             const y2 = b.y + rowH / 2;
-            const mid = Math.max(x1 + 8, Math.min(x2 - 8, x1 + 8));
+            const d = toFinish
+                ? `M${x1},${y1} H${Math.max(x1, x2) + 10} V${y2} H${x2 + 2}`
+                : `M${x1},${y1} H${fromStart ? Math.min(x1, x2) - 10 : x1 + 8} V${y2} H${x2 - 2}`;
             out.push({
-                d: `M${x1},${y1} H${mid} V${y2} H${x2 - 2}`,
+                d,
                 critical: showCritical.value && p.critical && b.critical,
             });
         }
@@ -160,6 +168,10 @@ const shownW = (b) => Math.max(px.value * 0.6, b.w + (offset(b)?.mode === 'resiz
                 <input v-model="showCritical" type="checkbox" class="rounded border-gading-200 text-orange-500 focus:ring-orange-400">
                 Tampilkan jalur kritis
             </label>
+            <label v-if="hasBaseline" class="inline-flex items-center gap-2 text-sm text-slate-600">
+                <input v-model="showBaseline" type="checkbox" class="rounded border-gading-200 text-slate-500 focus:ring-slate-400">
+                Tampilkan baseline
+            </label>
             <span v-if="editable" class="text-xs text-slate-400">Seret batang untuk menggeser, tarik ujung kanan untuk mengubah lama pengerjaan.</span>
         </div>
 
@@ -239,6 +251,11 @@ const shownW = (b) => Math.max(px.value * 0.6, b.w + (offset(b)?.mode === 'resiz
                             <!-- Aktivitas -->
                             <g v-else>
                                 <rect
+                                    v-if="showBaseline && b.baseline_start && b.baseline_finish"
+                                    :x="x(day(b.baseline_start))" :y="b.y + 30" :width="Math.max(4, x(day(b.baseline_finish) + DAY) - x(day(b.baseline_start)))" height="4" rx="2"
+                                    fill="#94A3B8" class="pointer-events-none"
+                                />
+                                <rect
                                     :x="shownLeft(b)" :y="b.y + 8" :width="shownW(b)" height="20" rx="6"
                                     :fill="`${barColor(b)}40`" :stroke="barColor(b)" stroke-width="1.2"
                                     class="cursor-grab"
@@ -270,6 +287,7 @@ const shownW = (b) => Math.max(px.value * 0.6, b.w + (offset(b)?.mode === 'resiz
             <span class="inline-flex items-center gap-1.5"><span class="h-3 w-5 rounded bg-orange-500" /> Jalur kritis</span>
             <span class="inline-flex items-center gap-1.5"><span class="h-2 w-5 rounded-sm bg-zamrud-900" /> Tahap</span>
             <span class="inline-flex items-center gap-1.5"><span class="h-2.5 w-2.5 rotate-45 bg-zamrud-900" /> Tonggak</span>
+            <span v-if="hasBaseline" class="inline-flex items-center gap-1.5"><span class="h-1 w-5 rounded bg-slate-400" /> Baseline</span>
             <span class="inline-flex items-center gap-1.5"><span class="h-3 w-0.5 bg-emas-500" /> Hari ini</span>
             <span v-if="fyEndX !== null" class="inline-flex items-center gap-1.5"><span class="h-3 w-0 border-l border-dashed border-orange-500" /> Akhir tahun anggaran</span>
         </div>

@@ -12,7 +12,7 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call([DemoSeeder::class, PtkinDemoSeeder::class, MedcoDemoSeeder::class, UnjDemoSeeder::class, DemoDocumentSeeder::class]);
+        $this->call([DemoSeeder::class, PtkinDemoSeeder::class, MedcoDemoSeeder::class, UnjDemoSeeder::class, DemoDocumentSeeder::class, DemoControlSeeder::class]);
 
         // Organisasi tanpa daftar unit kerja: pakai kategori kegiatannya.
         Organization::doesntHave('units')->each(function (Organization $org) {

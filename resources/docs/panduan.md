@@ -6,11 +6,11 @@ Buku tersebut menyusun sembilan bidang pengetahuan manajemen proyek (mengikuti P
 
 | Nilai | Bidang pengetahuan | Fitur Tadbira |
 | --- | --- | --- |
-| Istikamah (konsisten) | Integrasi | Dasbor portofolio, siklus pemantauan bulanan |
-| Sidik (benar) | Lingkup, Waktu | Daftar kegiatan, templat SRK, Gantt, jalur kritis |
-| Amanah (dapat dipercaya) | Biaya, Mutu | Anggaran, impor POK, realisasi, kurva S, tonggak BAST, dokumen kegiatan |
-| Tabligh (menyampaikan) | SDM, Komunikasi | Penanggung jawab, akun operator, sasaran & IKU, laporan per unit |
-| Fathanah (cerdas) | Risiko, Pengadaan | Kesehatan kegiatan (SPI), daftar Perlu perhatian, tahapan pengadaan |
+| Istikamah (konsisten) | Integrasi | Dasbor portofolio, kendali perubahan, siklus pemantauan bulanan |
+| Sidik (benar) | Lingkup, Waktu | Daftar kegiatan, templat SRK, Gantt, jalur kritis, jenis ketergantungan, baseline |
+| Amanah (dapat dipercaya) | Biaya, Mutu | Anggaran, impor POK, realisasi, kurva S, nilai hasil (SPI, CPI, EAC), tonggak BAST, dokumen kegiatan |
+| Tabligh (menyampaikan) | SDM, Komunikasi | Penanggung jawab, beban kerja, sasaran & IKU, laporan status cetak, ekspor Excel |
+| Fathanah (cerdas) | Risiko, Pengadaan | Register risiko dan isu, matriks 5×5, kesehatan kegiatan (SPI), tahapan pengadaan |
 
 Cara membaca panduan ini: mulai dari bab Memulai untuk masuk ke aplikasi, lalu baca bab per bidang sesuai peran Anda. Pengguna baru bisa mencoba semua langkah tanpa akun lewat Mode tamu dengan tiga data demo (UIN Sunan Kalijaga, MedcoEnergi, UNJ).
 
@@ -85,6 +85,21 @@ Dasbor adalah halaman pertama setelah masuk. Ia menyajikan gambaran menyeluruh i
 Tampilan yang sama dipakai untuk korporasi. Pada sektor swasta, istilahnya menyesuaikan: Sasaran strategis, KPI, dan Unit bisnis/aset.
 
 ![Dasbor demo MedcoEnergi](/images/panduan/09-dasbor-medco.webp)
+
+### Kendali perubahan: satu pintu untuk setiap perubahan
+
+Rencana yang baik tetap akan berubah: DIPA direvisi, peserta bertambah, penyedia terlambat. Yang membedakan kegiatan yang terkendali adalah perubahan itu **diajukan, ditimbang dampaknya, diputuskan, lalu dicatat**, bukan langsung dikerjakan.
+
+Buka tab **Perubahan** pada kegiatan.
+
+![Tab Perubahan: permintaan perubahan yang sudah disetujui beserta catatan keputusan](/images/panduan/19-perubahan.webp)
+
+1. Penanggung jawab kegiatan (atau siapa pun yang boleh mengubah kegiatan) klik **+ Ajukan perubahan**, lalu isi apa yang berubah, alasan, dampak jadwal (hari kerja), dampak biaya (rupiah), dan dampak lingkup. Nomornya otomatis: PP-001, PP-002, dan seterusnya.
+2. Pimpinan, perencana, atau admin klik **Putuskan**, pilih **Setujui** atau **Tolak** (penolakan wajib diberi alasan).
+3. Saat menyetujui, centang **Tetapkan ulang baseline** bila jadwal dan anggaran sudah disesuaikan. Kinerja selanjutnya diukur terhadap rencana baru.
+4. Pengaju dapat **Tarik** permintaan yang belum diputuskan.
+
+Setiap pengajuan dan keputusan tercatat di tab **Riwayat**. Di dasbor, kartu **Perubahan menunggu keputusan** mengingatkan pimpinan dan perencana akan permintaan yang belum dijawab.
 
 ## 3. Lingkup: kegiatan dan SRK
 
@@ -161,6 +176,13 @@ Di Kisi SRK, kolom **Pendahulu** menyatakan pekerjaan yang harus ditunggu. Tulis
 | `1.2` | Mulai setelah 1.2 selesai |
 | `1.2+3` | Mulai 3 hari kerja setelah 1.2 selesai |
 | `1.2, 1.3+2` | Menunggu keduanya; yang paling akhir menentukan |
+| `1.2SS` | Mulai bersamaan dengan 1.2 (mulai-ke-mulai) |
+| `1.2SS+2` | Mulai 2 hari kerja setelah 1.2 mulai, misalnya pengecatan menyusul pemasangan dinding |
+| `1.2FF` | Selesai bersamaan dengan 1.2 (selesai-ke-selesai), misalnya pengawasan selesai saat pekerjaan selesai |
+| `1.2SF` | Selesai saat 1.2 mulai (mulai-ke-selesai), jarang dipakai, misalnya sistem lama berhenti saat sistem baru berjalan |
+| `1.2-2` | Jeda negatif (tumpang tindih): mulai 2 hari kerja sebelum 1.2 selesai |
+
+Kode jenis mengikuti MS Project (FS, SS, FF, SF), sehingga mudah dipahami tim yang terbiasa dengan perangkat itu. Panah di Gantt ikut menyambung ke ujung batang yang sesuai.
 
 Lama dihitung dalam hari kerja. Tadbira melewati akhir pekan dan menghitung tanggal mulai serta selesai secara otomatis.
 
@@ -180,6 +202,16 @@ Kartu **Jalur kritis** di atas tab menunjukkan jumlah aktivitas kritis dan berap
 ### Menggeser seluruh jadwal
 
 Di tab **Ringkasan**, kotak **Jadwal & status** memungkinkan Anda mengubah tanggal mulai (atau tanggal acara untuk hitung mundur). Semua aktivitas bergeser bersama, dan tanggal selesai baru langsung tampil sebelum disimpan.
+
+### Baseline: rencana yang disepakati
+
+Jadwal di Tadbira bergeser otomatis setiap kali ada keterlambatan. Itu memudahkan, tetapi juga membuat keterlambatan "hilang" bila tidak ada pembanding. **Baseline** adalah foto jadwal dan anggaran pada saat disepakati, yang dibekukan sebagai ukuran.
+
+1. Setelah SRK, jadwal, dan anggaran disepakati, buka tab **Kinerja** dan klik **Tetapkan baseline**. Penanggung jawab kegiatan boleh melakukannya untuk pertama kali.
+2. Sejak itu, kisi SRK menampilkan kolom **Baseline** (tanggal selesai menurut baseline dan selisihnya dalam hari), Gantt menampilkan garis abu-abu tipis di bawah setiap batang, dan kemajuan rencana dihitung dari tanggal baseline.
+3. Menetapkan ulang baseline hanya oleh pimpinan, perencana, atau admin, wajib disertai alasan, dan sebaiknya melalui permintaan perubahan yang disetujui (lihat Bab 2).
+
+Kartu **Baseline** di tab Kinerja menunjukkan selesai baseline, perkiraan selesai, varians selesai, serta anggaran baseline dibanding anggaran saat ini. Daftar **Aktivitas yang paling bergeser dari baseline** menunjukkan di mana keterlambatan terjadi.
 
 ### Mengendalikan jadwal tiap bulan
 
@@ -228,6 +260,25 @@ Tab **Anggaran** pada kegiatan menampilkan pohon anggaran (komponen, akun, detai
 ### Membaca serapan
 
 Kartu **Anggaran** di atas tab menampilkan realisasi dan persentasenya. Di dasbor, kurva **Penyerapan anggaran kumulatif** membandingkan rencana penyerapan (mengikuti jadwal), realisasi, dan pagu. Realisasi yang jauh di bawah rencana menandakan pekerjaan atau pembayaran tertunda; realisasi di atas kemajuan fisik perlu ditanyakan.
+
+### Nilai hasil (earned value)
+
+Serapan saja tidak cukup: serapan 50% bisa berarti hemat atau justru boros, tergantung berapa pekerjaan yang sudah jadi. Tab **Kinerja** menggabungkan rencana, hasil fisik, dan biaya dalam satu satuan rupiah dengan metode *earned value* (PMBOK).
+
+![Tab Kinerja: indikator nilai hasil dan kartu baseline](/images/panduan/17-kinerja.webp)
+
+| Ukuran | Rumus | Cara membaca |
+| --- | --- | --- |
+| PV, nilai rencana | Anggaran × % rencana per hari ini | Nilai pekerjaan yang semestinya sudah selesai |
+| EV, nilai hasil | Anggaran × % selesai | Nilai pekerjaan yang benar-benar sudah selesai |
+| AC, biaya aktual | Realisasi dibayar | Uang yang sudah keluar |
+| SPI | EV ÷ PV | Di bawah 1,00 berarti tertinggal dari jadwal |
+| CPI | EV ÷ AC | Di bawah 1,00 berarti biaya melebihi nilai pekerjaan |
+| EAC | Anggaran ÷ CPI | Perkiraan biaya akhir bila efisiensi saat ini berlanjut |
+| ETC, VAC | EAC − AC, Anggaran − EAC | Sisa biaya yang dibutuhkan; VAC negatif berarti diperkirakan melampaui anggaran |
+| TCPI | (Anggaran − EV) ÷ (Anggaran − AC) | Efisiensi yang dibutuhkan untuk sisa pekerjaan; di atas 1,10 sulit dicapai |
+
+Angka anggaran yang dipakai adalah anggaran baseline bila sudah ditetapkan. Pada kontrak bertermin, pembayaran sering tertinggal dari pekerjaan fisik sehingga CPI tampak lebih baik dari sebenarnya; catat realisasi berstatus **Ditagih** bila ingin melihat kewajiban lebih awal. Di dasbor, kartu **Kinerja nilai hasil** menampilkan SPI, CPI, EAC, dan VAC gabungan seluruh kegiatan.
 
 ## 6. Mutu, SDM, dan Komunikasi
 
@@ -280,6 +331,15 @@ Menurut buku, kegiatan bisa kaya dana dan rencana tetapi tersendat "ketika orang
 
 **Di Tadbira**, setiap kegiatan punya **Penanggung jawab kegiatan**, dan setiap aktivitas di Kisi SRK punya kolom **Penanggung jawab** sendiri. Dengan begitu jelas siapa mengerjakan apa. Bagian **Aktivitas berikutnya** di tab Ringkasan menampilkan pekerjaan yang segera jatuh tempo beserta penanggung jawabnya, sehingga mudah dibahas dalam rapat koordinasi.
 
+Menu **Beban kerja** menunjukkan seberapa penuh setiap orang dalam 12 minggu ke depan, dihitung dari aktivitas yang belum selesai dan penanggung jawabnya, per hari kerja.
+
+![Beban kerja per orang per minggu](/images/panduan/20-beban-kerja.webp)
+
+- Angka 100% berarti seluruh hari kerja minggu itu terisi. Di atas 100% (oranye dan merah) berarti tugasnya bertumpuk: geser aktivitas yang punya kelonggaran, atau tunjuk orang lain.
+- Klik nama untuk melihat daftar aktivitasnya. Tombol ‹ dan › menggeser periode empat minggu.
+- **Anggota tanpa aktivitas** di bagian bawah membantu menemukan orang yang masih bisa dilibatkan.
+- Operator unit hanya melihat orang di unitnya; pimpinan dan perencana dapat menyaring per unit.
+
 ### Komunikasi: tabligh menyampaikan kebenaran
 
 "Saya sudah menyampaikan." Buku mengingatkan bahwa pesan yang disampaikan belum tentu membentuk pemahaman bersama. Lima prosesnya: mengidentifikasi pemangku kepentingan, merencanakan komunikasi, mendistribusikan informasi, mengelola harapan, dan melaporkan kinerja.
@@ -293,6 +353,10 @@ Menurut buku, kegiatan bisa kaya dana dan rencana tetapi tersendat "ketika orang
 - **Sasaran program & IKU** di dasbor mengelompokkan kegiatan per sasaran, lengkap dengan kemajuan, serapan, dan capaian tiap indikator terhadap target. Hubungkan setiap kegiatan ke sasarannya lewat kolom **Sasaran program** agar muncul di sini.
 - Saring dasbor per **fakultas/unit** untuk bahan rapat unit.
 - Satu sumber data untuk semua pihak: pimpinan, unit, dan SPI melihat angka yang sama, sehingga tidak perlu rekap ulang di lembar kerja.
+- Tombol **Laporan status** pada setiap kegiatan menyusun laporan satu halaman: kemajuan, perkiraan selesai, serapan, SPI dan CPI, tonggak, aktivitas terlambat, rencana 30 hari ke depan, risiko terbuka, dan permintaan perubahan, lengkap dengan kolom tanda tangan. Klik **Cetak / simpan PDF** untuk dicetak atau dilampirkan.
+- Tombol **Unduh Excel** pada kegiatan menghasilkan buku kerja berisi Ringkasan, SRK & jadwal, Anggaran, Risiko & isu, dan Perubahan. Di dasbor dan daftar kegiatan, **Unduh Excel** mengekspor seluruh kegiatan satu tahun anggaran beserta kesehatan jadwal, serapan, SPI, CPI, dan EAC.
+
+![Laporan status kegiatan siap cetak](/images/panduan/21-laporan-status.webp)
 
 ![Sasaran program & IKU dengan kemajuan, serapan, dan capaian indikator](/images/panduan/02c-sasaran.webp)
 
@@ -306,7 +370,21 @@ Buku mencontohkan syukuran di halaman rumah yang tiba-tiba mendung: keluarga yan
 >
 > "... dan bermusyawarahlah dengan mereka dalam segala urusan (penting)." (QS Ali 'Imran [3]:159)
 
-**Di Tadbira**, tanda bahaya dini dihitung otomatis dari indeks kinerja jadwal (SPI), yaitu kemajuan aktual dibagi kemajuan rencana per hari ini:
+**Di Tadbira**, setiap kegiatan punya **register risiko dan isu** di tab **Risiko**.
+
+![Tab Risiko: matriks 5×5 dan daftar risiko beserta respons](/images/panduan/18-risiko.webp)
+
+1. Klik **+ Risiko** untuk hal yang *mungkin* terjadi, atau **+ Isu** untuk masalah yang *sudah* terjadi (seperti beda kendaraan yang mungkin rusak dan yang sudah mogok).
+2. Nilai **probabilitas** dan **dampak** masing-masing 1 sampai 5. Skornya probabilitas × dampak: 1-4 rendah, 5-9 sedang, 10-16 tinggi, 17-25 ekstrem. Isu dianggap pasti terjadi (probabilitas 5).
+3. Pilih **strategi** respons: hindari, mitigasi, alihkan, terima, atau eskalasi. Tulis langkahnya, tunjuk **pemilik**, dan tetapkan **batas respons**. Kaitkan ke aktivitas bila risikonya menyangkut pekerjaan tertentu.
+4. **Matriks risiko** menampilkan sebaran risiko terbuka. Klik sel untuk menyaring daftar.
+5. Ubah status menjadi **Dipantau** saat respons berjalan, dan **Tutup** saat risiko tidak relevan lagi.
+
+Kartu **Risiko utama** di dasbor menampilkan isu terberat serta risiko tinggi dan ekstrem dari seluruh kegiatan, untuk dibahas di rapat pimpinan.
+
+![Kartu kendali di dasbor: nilai hasil, risiko utama, dan perubahan menunggu keputusan](/images/panduan/22-dasbor-kendali.webp)
+
+Selain register, tanda bahaya dini dihitung otomatis dari indeks kinerja jadwal (SPI), yaitu kemajuan aktual dibagi kemajuan rencana per hari ini:
 
 | Label kesehatan | Syarat | Tindakan yang disarankan |
 | --- | --- | --- |
@@ -349,10 +427,10 @@ Setiap pengguna punya satu peran di organisasinya. Peran menentukan tugas sekali
 
 | Peran | Tugas di Tadbira | Hak akses |
 | --- | --- | --- |
-| Pimpinan | Melihat dasbor portofolio, kegiatan kritis, dan capaian sasaran. Memimpin rapat evaluasi bulanan. | Melihat semua; tidak mengubah data. |
-| Perencana / Biro | Menyusun daftar kegiatan, mengimpor POK, mengaitkan kegiatan ke sasaran dan IKU, dan memverifikasi laporan. | Mengubah semua kegiatan, membuat tahun anggaran, impor anggaran. |
+| Pimpinan | Melihat dasbor portofolio, kegiatan kritis, risiko utama, dan capaian sasaran. Memimpin rapat evaluasi bulanan dan memutuskan permintaan perubahan. | Melihat semua; memutuskan perubahan dan menetapkan ulang baseline. |
+| Perencana / Biro | Menyusun daftar kegiatan, mengimpor POK, mengaitkan kegiatan ke sasaran dan IKU, dan memverifikasi laporan. | Mengubah semua kegiatan, membuat tahun anggaran, impor anggaran, memutuskan perubahan. |
 | Keuangan | Mengunggah Laporan Ketersediaan Dana atau mencatat realisasi per akun setiap bulan. | Impor anggaran dan realisasi, mencatat realisasi, mengunggah dokumen. |
-| Operator unit | Memperbarui persen selesai aktivitas, dokumen, dan kendala di unitnya. | Membuat dan mengubah kegiatan di unit kerjanya atau yang ia pimpin. |
+| Operator unit | Memperbarui persen selesai aktivitas, dokumen, risiko, dan kendala di unitnya; mengajukan perubahan. | Membuat dan mengubah kegiatan di unit kerjanya atau yang ia pimpin, termasuk menetapkan baseline pertama. |
 | Admin | Mengatur organisasi, pengguna, unit kerja, tahun anggaran, dan hari libur. | Semua, termasuk menu **Pengaturan**. |
 
 Penanggung jawab kegiatan bukan peran tersendiri: siapa pun yang ditunjuk memimpin sebuah kegiatan bisa mengubah kegiatan itu, walaupun kegiatannya ada di luar unitnya.
@@ -366,8 +444,8 @@ Istikamah dalam praktik berarti pemantauan yang berkesinambungan dan diikuti tin
 1. **Tanggal 1-3, Pengingat**: operator unit diingatkan memperbarui kemajuan kegiatan.
 2. **Tanggal 3-5, Isi kemajuan**: penanggung jawab mengisi % selesai di Kisi SRK berdasarkan hasil nyata.
 3. **Tanggal 5-7, Unggah realisasi**: keuangan mengimpor Laporan Ketersediaan Dana Detail bulan lalu dari SAKTI/OM-SPAN.
-4. **Tanggal 7-8, Verifikasi**: perencana memeriksa kegiatan berlabel Perlu perhatian dan Terlambat, serta menanyakan bukti.
-5. **Tanggal 10, Rapat evaluasi**: pimpinan meninjau dasbor dan menetapkan tindak lanjut, penanggung jawab, serta tenggatnya.
+4. **Tanggal 7-8, Verifikasi**: perencana memeriksa kegiatan berlabel Perlu perhatian dan Terlambat, CPI di bawah 0,95, serta risiko yang melewati batas respons, dan menanyakan bukti.
+5. **Tanggal 10, Rapat evaluasi**: pimpinan meninjau dasbor (kinerja nilai hasil, risiko utama, beban kerja), memutuskan permintaan perubahan yang menunggu, dan menetapkan tindak lanjut, penanggung jawab, serta tenggatnya. Cetak **Laporan status** kegiatan yang dibahas sebagai lampiran notulen.
 
 ### Tugas admin
 

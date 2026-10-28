@@ -4,8 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\ActivityLog;
 use App\Models\BudgetLine;
+use App\Models\ChangeRequest;
 use App\Models\Project;
 use App\Models\ProjectDocument;
+use App\Models\ProjectRisk;
 use App\Models\Task;
 use App\Services\ActivityLogger;
 use App\Services\PortfolioService;
@@ -119,7 +121,7 @@ class ProjectController extends Controller
     {
         $this->authorizeProject($request, $project);
         $access = $this->access($request);
-        $project->load(['fiscalYear', 'goal.indicators', 'leader:id,name', 'tasks.assignees:id,name', 'dependencies']);
+        $project->load(['fiscalYear', 'goal.indicators', 'leader:id,name', 'tasks.assignees:id,name', 'dependencies', 'baselineBy:id,name']);
 
         $tasks = $this->orderedTasks($project->tasks);
         $wbsById = $tasks->pluck('wbs_code', 'id')->all();
@@ -146,6 +148,14 @@ class ProjectController extends Controller
                 'computed_finish_date' => $project->computed_finish_date?->toDateString(),
                 'status_label' => $project->statusLabel(),
                 'leader' => $project->leader?->name,
+                'baseline' => $project->hasBaseline() ? [
+                    'number' => $project->baseline_number,
+                    'start' => $project->baseline_start?->toDateString(),
+                    'finish' => $project->baseline_finish?->toDateString(),
+                    'budget' => $project->baseline_budget,
+                    'at' => $project->baseline_at?->toIso8601String(),
+                    'by' => $project->baselineBy?->name,
+                ] : null,
                 'fiscal_year' => $project->fiscalYear ? Arr::only($project->fiscalYear->toArray(), ['ulid', 'code', 'start_date', 'end_date']) : null,
                 'goal_id' => $project->goal_id,
                 'goal' => $project->goal ? [
@@ -176,6 +186,10 @@ class ProjectController extends Controller
                 'manual_start' => $t->manual_start?->toDateString(),
                 'predecessors' => PredecessorParser::format($depsBySuccessor->get($t->id, []), $wbsById),
                 'predecessor_ids' => $depsBySuccessor->get($t->id, collect())->pluck('predecessor_id'),
+                'predecessor_links' => $depsBySuccessor->get($t->id, collect())->map(fn ($d) => ['id' => $d->predecessor_id, 'type' => $d->type ?: 'FS'])->values(),
+                'baseline_start' => $t->baseline_start?->toDateString(),
+                'baseline_finish' => $t->baseline_finish?->toDateString(),
+                'finish_variance' => $t->baseline_finish && $t->finish_date ? (int) $t->baseline_finish->diffInDays($t->finish_date, false) : null,
                 'assignees' => $t->assignees->pluck('name'),
             ])->values(),
             'budget' => $this->budgetTree($project, $realizedByLine),
@@ -186,12 +200,47 @@ class ProjectController extends Controller
                 ->orderBy('name')->get(['users.id', 'users.name']),
             'permissions' => $access->projectPermissions($project),
             'documents' => $this->documents($access, $project),
+            'risks' => $this->risks($project),
+            'changeRequests' => $project->changeRequests()->with(['requester:id,name', 'decider:id,name'])->get()->map(fn (ChangeRequest $c) => [
+                'ulid' => $c->ulid,
+                'code' => $c->code(),
+                ...$c->only(['title', 'description', 'reason', 'schedule_impact_days', 'cost_impact', 'scope_impact', 'status', 'decision_note', 'rebaselined']),
+                'status_label' => ChangeRequest::STATUSES[$c->status] ?? $c->status,
+                'requester' => $c->requester?->name,
+                'decider' => $c->decider?->name,
+                'created_at' => $c->created_at?->toIso8601String(),
+                'decided_at' => $c->decided_at?->toIso8601String(),
+            ]),
+            'riskOptions' => [
+                'categories' => ProjectRisk::CATEGORIES,
+                'strategies' => ProjectRisk::STRATEGIES,
+                'statuses' => ProjectRisk::STATUSES,
+            ],
             'documentRules' => [
                 'max_kb' => config('tadbira.documents.max_kb'),
                 'extensions' => config('tadbira.documents.extensions'),
                 'categories' => config('tadbira.documents.categories'),
             ],
         ]);
+    }
+
+    private function risks(Project $project): array
+    {
+        return $project->risks()->with(['owner:id,name', 'task:id,ulid,wbs_code,title'])->get()
+            ->map(function (ProjectRisk $r) {
+                $score = $r->score();
+
+                return [
+                    'ulid' => $r->ulid,
+                    ...$r->only(['type', 'title', 'description', 'category', 'probability', 'impact', 'strategy', 'response', 'owner_id', 'status']),
+                    'due_date' => $r->due_date?->toDateString(),
+                    'score' => $score,
+                    'level' => ProjectRisk::level($score),
+                    'owner' => $r->owner?->name,
+                    'task' => $r->task ? ['ulid' => $r->task->ulid, 'label' => trim($r->task->wbs_code.' '.$r->task->title)] : null,
+                ];
+            })
+            ->sortBy([['status', 'desc'], ['score', 'desc']])->values()->all();
     }
 
     private function documents(Access $access, Project $project): array

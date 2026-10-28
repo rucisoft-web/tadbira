@@ -10,10 +10,16 @@ Istilah mengikuti PMBOK edisi ke-4 (SRK/WBS, tahap, tonggak, jalur kritis, peman
 
 - **Dasbor portofolio** per tahun anggaran: kartu ringkasan, donat status, kesehatan proyek (berdasarkan SPI), batang kemajuan rencana vs realisasi, kurva S anggaran kumulatif per bulan, dan Gantt portofolio.
 - **Banyak proyek dalam satu tahun anggaran**, dengan pemilih tahun anggaran dan pemindah organisasi (satu pengguna bisa tergabung di beberapa organisasi).
-- **Penjadwalan dinamis (CPM)** pada hari kerja: ketergantungan selesai-ke-mulai dengan jeda, tonggak, rollup tahap, deteksi siklus, hari libur nasional dan organisasi, serta jalur kritis dan *slack*.
+- **Penjadwalan dinamis (CPM)** pada hari kerja: ketergantungan FS, SS, FF, dan SF dengan jeda positif atau negatif, tonggak, rollup tahap, deteksi siklus, hari libur nasional dan organisasi, serta jalur kritis dan *slack*.
 - **Hitung mundur**: isi tanggal acara, aplikasi menghitung kapan harus mulai.
 - **Gantt chart** interaktif: skala hari/minggu/bulan, panah ketergantungan, sorot jalur kritis, geser batang untuk memindah, tarik ujung untuk mengubah durasi, garis hari ini dan batas tahun anggaran.
-- **Kisi SRK** yang bisa disunting langsung: durasi, pendahulu (`1.2, 1.3+2`), persen selesai, penanggung jawab.
+- **Kisi SRK** yang bisa disunting langsung: durasi, pendahulu (`1.2, 1.3+2, 2.1SS+1, 2.2FF`), persen selesai, penanggung jawab.
+- **Baseline** jadwal dan anggaran: varians selesai per aktivitas dan kegiatan, garis baseline di Gantt, dan penetapan ulang yang tercatat.
+- **Nilai hasil (earned value)** per kegiatan dan portofolio: PV, EV, AC, SV, CV, SPI, CPI, EAC, ETC, VAC, TCPI.
+- **Register risiko dan isu**: probabilitas × dampak, matriks 5×5, strategi respons, pemilik, batas respons, dan ringkasan risiko utama di dasbor.
+- **Kendali perubahan**: permintaan perubahan bernomor dengan dampak jadwal, biaya, dan lingkup; diputuskan pimpinan/perencana dan dapat menetapkan ulang baseline.
+- **Beban kerja** per orang per minggu dari penugasan aktivitas, dengan sorotan kelebihan beban.
+- **Laporan status** satu halaman siap cetak/PDF dan **ekspor Excel** per kegiatan (SRK, anggaran, risiko, perubahan) maupun portofolio.
 - **Templat proyek**: simpan proyek sebagai templat, lalu buat proyek baru cukup dengan memilih tanggal mulai. Pratinjau menampilkan tanggal selesai, tiap tahap, tonggak, dan peringatan bila melewati tahun anggaran.
 - **Impor POK RKA-K/L** (ekspor SAKTI), **Laporan Ketersediaan Dana Detail** (PDF atau XLS dari SAKTI/OM-SPAN, termasuk realisasi s.d. periode), dan **RAB/RKAP**: setiap RO menjadi satu kegiatan, dan struktur Komponen/Subkomponen bisa langsung dibentuk menjadi SRK. Unggah laporan realisasi tiap bulan untuk memperbarui pagu dan realisasi.
 - **Anggaran dan realisasi** per baris (akun/pos) dengan status komitmen/tagihan/dibayar.
@@ -140,7 +146,7 @@ Untuk pemda, BUMN, BUMD, swasta, dan nirlaba. Kolom: `KODE`, `URAIAN`, `LEVEL` (
 php artisan test
 ```
 
-Tes mencakup mesin penjadwalan (maju, mundur, tonggak, jeda, siklus), pembaca POK/RAB, pembuatan proyek dari templat, impor POK lewat HTTP, dan pembatasan akses antarorganisasi.
+Tes mencakup mesin penjadwalan (maju, mundur, tonggak, jeda, SS/FF/SF, siklus), nilai hasil, baseline, register risiko, kendali perubahan, beban kerja, laporan dan ekspor, pembaca POK/RAB, pembuatan proyek dari templat, impor POK lewat HTTP, dan pembatasan akses antarorganisasi.
 
 ## Struktur penting
 
@@ -151,5 +157,8 @@ Tes mencakup mesin penjadwalan (maju, mundur, tonggak, jeda, siklus), pembaca PO
 | `app/Services/Budget` | Pembaca dan pengimpor POK/RAB, contoh berkas |
 | `app/Services/PortfolioService.php` | Ringkasan dasbor, kesehatan, kurva S |
 | `app/Services/TemplateService.php` | Pratinjau dan pembuatan proyek dari templat |
+| `app/Services/Performance`, `BaselineService.php` | Nilai hasil dan baseline |
+| `app/Services/Reports` | Laporan status dan ekspor Excel |
+| `app/Http/Controllers/Control` | Baseline, risiko, perubahan, beban kerja, laporan |
 | `resources/js/Pages` | Halaman Vue (Dasbor, Kegiatan, Impor) |
 | `resources/js/Components/ProjectGantt.vue` | Gantt interaktif |

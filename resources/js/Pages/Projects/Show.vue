@@ -7,6 +7,9 @@ import ProgressBar from '@/Components/ProgressBar.vue';
 import StatCard from '@/Components/StatCard.vue';
 import ProjectGantt from '@/Components/ProjectGantt.vue';
 import ProjectDocuments from '@/Components/ProjectDocuments.vue';
+import ProjectPerformance from '@/Components/ProjectPerformance.vue';
+import ProjectRisks from '@/Components/ProjectRisks.vue';
+import ProjectChanges from '@/Components/ProjectChanges.vue';
 import { persen, rupiah, rupiahRingkas, tanggal, tanggalPanjang } from '@/lib/format';
 
 const props = defineProps({
@@ -20,7 +23,10 @@ const props = defineProps({
     goals: { type: Array, default: () => [] },
     documents: { type: Array, default: () => [] },
     documentRules: { type: Object, default: () => ({ max_kb: 20480, extensions: [], categories: [] }) },
-    permissions: { type: Object, default: () => ({ edit: false, delete: false, documents: false, import_budget: false, record_expenditure: false }) },
+    permissions: { type: Object, default: () => ({ edit: false, delete: false, documents: false, import_budget: false, record_expenditure: false, approve_change: false }) },
+    risks: { type: Array, default: () => [] },
+    changeRequests: { type: Array, default: () => [] },
+    riskOptions: { type: Object, default: () => ({ categories: [], strategies: {}, statuses: {} }) },
 });
 const canEdit = computed(() => props.permissions.edit);
 
@@ -30,7 +36,13 @@ const errors = computed(() => page.props.errors ?? {});
 const now = new Date();
 const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-const tabs = ['ringkasan', 'kisi', 'gantt', 'anggaran', 'dokumen', 'riwayat'];
+const tabs = ['ringkasan', 'kisi', 'gantt', 'kinerja', 'anggaran', 'risiko', 'perubahan', 'dokumen', 'riwayat'];
+const tabLabels = { ringkasan: 'Ringkasan', kisi: 'Kisi SRK', gantt: 'Gantt', kinerja: 'Kinerja', anggaran: 'Anggaran', risiko: 'Risiko', perubahan: 'Perubahan', dokumen: 'Dokumen', riwayat: 'Riwayat' };
+const tabCount = computed(() => ({
+    dokumen: props.documents.length,
+    risiko: props.risks.filter((r) => r.status !== 'closed').length,
+    perubahan: props.changeRequests.filter((c) => c.status === 'submitted').length,
+}));
 const initialTab = new URLSearchParams(window.location.search).get('tab');
 const tab = ref(tabs.includes(initialTab) ? initialTab : 'gantt');
 const setTab = (t) => {
@@ -135,7 +147,13 @@ const kindLabel = { phase: terms.value.phase, work_package: terms.value.work_pac
                     {{ tanggal(project.computed_start_date) }} – <span class="font-semibold text-zamrud-900">{{ tanggal(project.computed_finish_date) }}</span>
                 </p>
             </div>
-            <HealthBadge :health="summary.health" />
+            <div class="flex flex-col items-end gap-2">
+                <HealthBadge :health="summary.health" />
+                <div class="flex gap-2">
+                    <a :href="route('projects.report', project.ulid)" target="_blank" class="tombol-sekunder text-xs">Laporan status</a>
+                    <a :href="route('projects.export', project.ulid)" class="tombol-sekunder text-xs">Unduh Excel</a>
+                </div>
+            </div>
         </section>
 
         <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -150,8 +168,8 @@ const kindLabel = { phase: terms.value.phase, work_package: terms.value.work_pac
         <!-- Tab -->
         <nav class="mt-8 flex gap-6 overflow-x-auto border-b border-gading-200">
             <button v-for="t in tabs" :key="t" type="button" class="tab capitalize" :class="{ 'tab-aktif': tab === t }" @click="setTab(t)">
-                {{ { ringkasan: 'Ringkasan', kisi: 'Kisi SRK', gantt: 'Gantt', anggaran: 'Anggaran', dokumen: 'Dokumen', riwayat: 'Riwayat' }[t] }}
-                <span v-if="t === 'dokumen' && documents.length" class="ml-1 rounded-full bg-zamrud-100 px-1.5 text-[11px] text-zamrud-800">{{ documents.length }}</span>
+                {{ tabLabels[t] }}
+                <span v-if="tabCount[t]" class="ml-1 rounded-full px-1.5 text-[11px]" :class="t === 'perubahan' ? 'bg-emas-100 text-emas-800' : 'bg-zamrud-100 text-zamrud-800'">{{ tabCount[t] }}</span>
             </button>
         </nav>
 
@@ -250,6 +268,7 @@ const kindLabel = { phase: terms.value.phase, work_package: terms.value.work_pac
                             <th class="w-24 px-3 py-3" :title="terms.duration">Lama (hari)</th>
                             <th class="px-3 py-3">Mulai</th>
                             <th class="px-3 py-3">Selesai</th>
+                            <th v-if="project.baseline" class="px-3 py-3" title="Selesai menurut baseline dan selisihnya (hari kalender)">Baseline</th>
                             <th class="w-32 px-3 py-3">{{ terms.predecessor }}</th>
                             <th class="w-24 px-3 py-3">% Selesai</th>
                             <th class="px-3 py-3">{{ terms.responsible }}</th>
@@ -279,8 +298,12 @@ const kindLabel = { phase: terms.value.phase, work_package: terms.value.work_pac
                             </td>
                             <td class="whitespace-nowrap px-3 py-1.5 tabular-nums">{{ tanggal(t.start) }}</td>
                             <td class="whitespace-nowrap px-3 py-1.5 tabular-nums" :class="!t.is_summary && t.finish < today && t.percent_complete < 100 ? 'text-orange-600' : ''">{{ tanggal(t.finish) }}</td>
+                            <td v-if="project.baseline" class="whitespace-nowrap px-3 py-1.5 text-xs tabular-nums text-slate-500">
+                                {{ tanggal(t.baseline_finish) }}
+                                <span v-if="t.finish_variance" class="ml-1 font-semibold" :class="t.finish_variance > 0 ? 'text-orange-600' : 'text-zamrud-700'">{{ t.finish_variance > 0 ? '+' : '' }}{{ t.finish_variance }}</span>
+                            </td>
                             <td class="px-3 py-1.5">
-                                <input v-if="!t.is_summary" :value="t.predecessors" :disabled="!canEdit" placeholder="mis. 1.2, 1.3+2" class="w-28 rounded border-gading-200 px-2 py-1 text-sm" @change="save(t, 'predecessors', $event.target.value)">
+                                <input v-if="!t.is_summary" :value="t.predecessors" :disabled="!canEdit" placeholder="mis. 1.2, 1.3SS+2" class="w-28 rounded border-gading-200 px-2 py-1 text-sm" @change="save(t, 'predecessors', $event.target.value)">
                             </td>
                             <td class="px-3 py-1.5">
                                 <span v-if="t.is_summary" class="tabular-nums">{{ t.percent_complete }}%</span>
@@ -338,12 +361,17 @@ const kindLabel = { phase: terms.value.phase, work_package: terms.value.work_pac
                 <button class="tombol justify-center sm:col-span-1" :disabled="newTask.processing">Tambah</button>
                 <p v-if="newTask.errors.predecessors || newTask.errors.title" class="text-sm text-orange-600 sm:col-span-12">{{ newTask.errors.predecessors || newTask.errors.title }}</p>
             </form>
-            <p v-if="canEdit" class="mt-2 text-xs text-slate-500">Pendahulu ditulis dengan nomor SRK: "1.2" berarti mulai setelah 1.2 selesai, "1.2+3" dengan jeda 3 hari kerja.</p>
+            <p v-if="canEdit" class="mt-2 text-xs text-slate-500">Pendahulu ditulis dengan nomor SRK: "1.2" berarti mulai setelah 1.2 selesai, "1.2+3" dengan jeda 3 hari kerja. Jenis lain: "1.2SS" mulai bersamaan, "1.2FF" selesai bersamaan, "1.2SF" selesai saat 1.2 mulai; jeda boleh negatif, mis. "1.2SS-1".</p>
         </section>
 
         <!-- Gantt -->
         <section v-if="tab === 'gantt'" class="mt-6">
             <ProjectGantt :tasks="tasks" :today="today" :fiscal-year-end="project.fiscal_year?.end_date" :editable="canEdit" />
+        </section>
+
+        <!-- Kinerja -->
+        <section v-if="tab === 'kinerja'" class="mt-6">
+            <ProjectPerformance :project="project" :summary="summary" :tasks="tasks" :permissions="permissions" />
         </section>
 
         <!-- Anggaran -->
@@ -415,6 +443,16 @@ const kindLabel = { phase: terms.value.phase, work_package: terms.value.work_pac
                     </tbody>
                 </table>
             </div>
+        </section>
+
+        <!-- Risiko -->
+        <section v-if="tab === 'risiko'" class="mt-6">
+            <ProjectRisks :project="project" :risks="risks" :tasks="tasks" :users="users" :options="riskOptions" :editable="canEdit" />
+        </section>
+
+        <!-- Perubahan -->
+        <section v-if="tab === 'perubahan'" class="mt-6">
+            <ProjectChanges :project="project" :changes="changeRequests" :can-submit="canEdit" :can-decide="permissions.approve_change" />
         </section>
 
         <!-- Dokumen -->

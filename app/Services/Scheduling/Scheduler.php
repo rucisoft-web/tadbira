@@ -11,7 +11,8 @@ use Carbon\CarbonImmutable;
  * proyek nyata, pratinjau templat, dan simulasi usulan perubahan.
  *
  * Node: ['id', 'parent_id', 'kind', 'duration', 'mode', 'manual_start', 'constraint_type', 'constraint_date']
- * Edge: ['predecessor', 'successor', 'lag'] (jenis Selesai-ke-Mulai)
+ * Edge: ['predecessor', 'successor', 'lag', 'type'] dengan type FS (Selesai-ke-Mulai, bawaan), SS (Mulai-ke-Mulai),
+ *       FF (Selesai-ke-Selesai), atau SF (Mulai-ke-Selesai).
  */
 class Scheduler
 {
@@ -62,7 +63,7 @@ class Scheduler
             } else {
                 $start = $projectStart;
                 foreach ($preds[$id] ?? [] as $e) {
-                    $start = max($start, $this->successorStart($e['predecessor'], $ef, $leaves, (int) ($e['lag'] ?? 0)));
+                    $start = max($start, $this->earliestStart($e, $es, $ef, $leaves, $duration));
                 }
                 if (! empty($n['constraint_date'])) {
                     $cd = $cal->nextWorkingDay($n['constraint_date']);
@@ -123,10 +124,19 @@ class Scheduler
             foreach ($succs[$id] ?? [] as $e) {
                 $succId = $e['successor'];
                 $lag = (int) ($e['lag'] ?? 0);
-                // Selesai paling lambat = sehari kerja sebelum penerus harus mulai (dikurangi jeda).
-                $candidate = $duration === 0
-                    ? $cal->addWorkingDays($ls[$succId], -$lag)
-                    : $cal->addWorkingDays($ls[$succId], -1 - $lag);
+                $succDuration = $this->duration($leaves[$succId]);
+                $candidate = match ($e['type'] ?? 'FS') {
+                    // Mulai paling lambat = mulai paling lambat penerus dikurangi jeda.
+                    'SS' => $this->finishForStart($cal->addWorkingDays($ls[$succId], -$lag), $duration),
+                    'FF' => $cal->addWorkingDays($lf[$succId], -$lag),
+                    'SF' => $this->finishForStart($succDuration === 0
+                        ? $cal->addWorkingDays($ls[$succId], -$lag)
+                        : $cal->addWorkingDays($lf[$succId], 1 - $lag), $duration),
+                    // Selesai paling lambat = sehari kerja sebelum penerus harus mulai (dikurangi jeda).
+                    default => $duration === 0
+                        ? $cal->addWorkingDays($ls[$succId], -$lag)
+                        : $cal->addWorkingDays($ls[$succId], -1 - $lag),
+                };
                 $late = min($late, $candidate);
             }
             $lf[$id] = $cal->previousWorkingDay($late);
@@ -134,6 +144,33 @@ class Scheduler
         }
 
         return [$ls, $lf];
+    }
+
+    /** Mulai paling awal penerus menurut jenis urutan (FS, SS, FF, SF) dan jedanya. */
+    private function earliestStart(array $e, array $es, array $ef, array $leaves, int $duration): CarbonImmutable
+    {
+        $cal = $this->calendar;
+        $pred = $e['predecessor'];
+        $lag = (int) ($e['lag'] ?? 0);
+
+        return match ($e['type'] ?? 'FS') {
+            'SS' => $cal->addWorkingDays($es[$pred], $lag),
+            'FF' => $this->startForFinish($cal->addWorkingDays($ef[$pred], $lag), $duration),
+            'SF' => $duration === 0
+                ? $cal->addWorkingDays($es[$pred], $lag)
+                : $this->startForFinish($cal->addWorkingDays($es[$pred], $lag - 1), $duration),
+            default => $this->successorStart($pred, $ef, $leaves, $lag),
+        };
+    }
+
+    private function startForFinish(CarbonImmutable $finish, int $duration): CarbonImmutable
+    {
+        return $duration === 0 ? $finish : $this->calendar->startFrom($finish, $duration);
+    }
+
+    private function finishForStart(CarbonImmutable $start, int $duration): CarbonImmutable
+    {
+        return $duration === 0 ? $start : $this->calendar->finishFrom($start, $duration);
     }
 
     private function successorStart(int|string $predId, array $ef, array $leaves, int $lag): CarbonImmutable

@@ -20,6 +20,7 @@ const props = defineProps({
     units: { type: Array, default: () => [] },
     unit: String,
     today: String,
+    control: { type: Object, default: null },
 });
 
 const terms = computed(() => usePage().props.terms);
@@ -54,6 +55,11 @@ const ganttProjects = computed(() => (projects.value.length <= MAX_GANTT
 const units = computed(() => props.portfolio?.by_unit ?? []);
 const goals = computed(() => props.portfolio?.goals ?? []);
 
+const evm = computed(() => totals.value.evm ?? {});
+const idx = (v) => (v === null || v === undefined ? '–' : v.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+const idxTone = (v) => (v === null || v === undefined ? 'text-slate-400' : v >= 0.95 ? 'text-zamrud-700' : v >= 0.8 ? 'text-emas-700' : 'text-orange-600');
+const riskTone = { sedang: 'bg-emas-100 text-emas-800', tinggi: 'bg-orange-100 text-orange-800', ekstrem: 'bg-red-100 text-red-800', rendah: 'bg-zamrud-100 text-zamrud-800' };
+
 const showNewFy = ref(false);
 const fyForm = useForm({ year: new Date().getFullYear() + 1, ceiling_amount: '' });
 const createFy = () => fyForm.post(route('fiscal-years.store'), { onSuccess: () => (showNewFy.value = false) });
@@ -81,6 +87,7 @@ const createFy = () => fyForm.post(route('fiscal-years.store'), { onSuccess: () 
                 <button v-if="$page.props.auth.access?.can.fiscal_years" type="button" class="text-xs font-semibold text-zamrud-700 hover:underline" @click="showNewFy = !showNewFy">
                     + {{ terms.fiscal_year }}
                 </button>
+                <a v-if="fiscalYear" :href="route('portfolio.export', { ta: fiscalYear.ulid, unit: unit || undefined })" class="ml-auto text-xs font-semibold text-zamrud-700 hover:underline">Unduh Excel</a>
             </div>
         </template>
 
@@ -128,6 +135,62 @@ const createFy = () => fyForm.post(route('fiscal-years.store'), { onSuccess: () 
                     <ProgressBar class="mt-3" :value="Math.round(absorption)" color="#38BDF8" />
                 </StatCard>
                 <StatCard label="Aktivitas terlambat" :value="totals.late_tasks" :hint="totals.beyond_fiscal_year ? `${totals.beyond_fiscal_year} ${terms.project?.toLowerCase()} melewati akhir TA` : 'Semua dalam tahun anggaran'" accent="#F97316" />
+            </div>
+
+            <!-- Kendali proyek -->
+            <div v-if="control" class="mt-6 grid gap-6 xl:grid-cols-3">
+                <div class="kartu p-5">
+                    <h3 class="judul-kartu">Kinerja nilai hasil</h3>
+                    <p class="mb-4 text-xs text-slate-500">Gabungan seluruh {{ terms.project?.toLowerCase() }}; {{ totals.baselined }} dari {{ totals.count }} sudah punya baseline</p>
+                    <div class="grid grid-cols-2 gap-3 text-center">
+                        <div class="rounded-xl bg-gading-50 p-3">
+                            <p class="text-[11px] font-semibold uppercase text-slate-500">SPI</p>
+                            <p class="text-2xl font-bold tabular-nums" :class="idxTone(evm.spi)">{{ idx(evm.spi) }}</p>
+                            <p class="text-[11px] text-slate-500">jadwal</p>
+                        </div>
+                        <div class="rounded-xl bg-gading-50 p-3">
+                            <p class="text-[11px] font-semibold uppercase text-slate-500">CPI</p>
+                            <p class="text-2xl font-bold tabular-nums" :class="idxTone(evm.cpi)">{{ idx(evm.cpi) }}</p>
+                            <p class="text-[11px] text-slate-500">biaya</p>
+                        </div>
+                    </div>
+                    <dl class="mt-4 space-y-1.5 text-sm">
+                        <div class="flex justify-between"><dt class="text-slate-500">Nilai hasil (EV)</dt><dd class="font-semibold tabular-nums">{{ rupiahRingkas(evm.ev) }}</dd></div>
+                        <div class="flex justify-between"><dt class="text-slate-500">Perkiraan biaya akhir (EAC)</dt><dd class="font-semibold tabular-nums">{{ rupiahRingkas(evm.eac) }}</dd></div>
+                        <div class="flex justify-between"><dt class="text-slate-500">Varians saat selesai (VAC)</dt><dd class="font-semibold tabular-nums" :class="evm.vac < 0 ? 'text-orange-600' : 'text-zamrud-700'">{{ rupiahRingkas(evm.vac) }}</dd></div>
+                    </dl>
+                </div>
+                <div class="kartu p-5">
+                    <h3 class="judul-kartu">Risiko utama</h3>
+                    <p class="mb-3 text-xs text-slate-500">{{ control.open_risks }} risiko terbuka · {{ control.open_issues }} isu belum selesai</p>
+                    <ul v-if="control.top_risks.length" class="divide-y divide-gading-100">
+                        <li v-for="(r, i) in control.top_risks" :key="i" class="py-2.5">
+                            <Link :href="route('projects.show', { project: r.project_ulid, tab: 'risiko' })" class="flex items-start gap-3">
+                                <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-xs font-bold" :class="riskTone[r.level]">{{ r.score }}</span>
+                                <span class="min-w-0">
+                                    <span class="block text-sm font-medium text-zamrud-950">{{ r.type === 'issue' ? 'Isu: ' : '' }}{{ r.title }}</span>
+                                    <span class="block truncate text-xs text-slate-500">{{ r.project }}{{ r.owner ? ` · ${r.owner}` : '' }}</span>
+                                </span>
+                            </Link>
+                        </li>
+                    </ul>
+                    <p v-else class="rounded-xl bg-zamrud-50 p-4 text-sm text-zamrud-800">Tidak ada risiko tinggi yang terbuka.</p>
+                </div>
+                <div class="kartu p-5">
+                    <h3 class="judul-kartu">Perubahan menunggu keputusan</h3>
+                    <p class="mb-3 text-xs text-slate-500">{{ $page.props.auth.access?.can.approve_change ? 'Perlu keputusan Anda' : 'Diputuskan oleh pimpinan atau perencana' }}</p>
+                    <ul v-if="control.pending_changes.length" class="divide-y divide-gading-100">
+                        <li v-for="c in control.pending_changes" :key="c.code + c.project_ulid" class="py-2.5">
+                            <Link :href="route('projects.show', { project: c.project_ulid, tab: 'perubahan' })" class="block">
+                                <span class="block text-sm font-medium text-zamrud-950"><span class="font-mono text-xs text-emas-700">{{ c.code }}</span> {{ c.title }}</span>
+                                <span class="block truncate text-xs text-slate-500">
+                                    {{ c.project }}<template v-if="c.days"> · {{ c.days > 0 ? '+' : '' }}{{ c.days }} hari</template><template v-if="c.cost"> · {{ rupiahRingkas(c.cost) }}</template>
+                                </span>
+                            </Link>
+                        </li>
+                    </ul>
+                    <p v-else class="rounded-xl bg-zamrud-50 p-4 text-sm text-zamrud-800">Tidak ada permintaan perubahan yang menunggu.</p>
+                </div>
             </div>
 
             <!-- Grafik -->
