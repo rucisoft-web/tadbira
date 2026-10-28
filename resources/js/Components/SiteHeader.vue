@@ -12,6 +12,7 @@ const props = defineProps({
 
 const base = computed(() => (props.onHome ? '' : '/'));
 const menu = [
+    { label: 'Profetik', href: '#profetik', class: 'hidden xl:inline' },
     { label: 'Kenapa perlu', href: '#kenapa' },
     { label: 'Fitur', href: '#fitur' },
     { label: 'Data demo', href: '#data-demo' },
@@ -29,7 +30,7 @@ const materialsPath = route('workshop.materials');
         <div class="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4 sm:px-6">
             <Link href="/" class="h-10 shrink-0"><ApplicationLogo with-text class="h-10" /></Link>
             <nav class="hidden items-center gap-4 whitespace-nowrap text-sm font-medium text-slate-600 lg:flex xl:gap-5">
-                <a v-for="m in menu" :key="m.href" :href="base + m.href" class="hover:text-zamrud-800">{{ m.label }}</a>
+                <a v-for="m in menu" :key="m.href" :href="base + m.href" class="hover:text-zamrud-800" :class="m.class">{{ m.label }}</a>
                 <a :href="executivePath" class="hover:text-zamrud-800">Untuk eksekutif</a>
                 <div class="relative" @mouseenter="openWorkshop = true" @mouseleave="openWorkshop = false">
                     <button type="button" class="flex items-center gap-1 hover:text-zamrud-800" :aria-expanded="openWorkshop" @click="openWorkshop = !openWorkshop">
@@ -62,8 +63,8 @@ const materialsPath = route('workshop.materials');
                         </div>
                     </div>
                 </div>
-                <a :href="base + '#tanya'" class="hover:text-zamrud-800">Tanya jawab</a>
-                <a :href="site" class="hidden hover:text-zamrud-800 xl:inline">Rucisoft.id</a>
+                <a :href="base + '#tanya'" class="hidden hover:text-zamrud-800 xl:inline">Tanya jawab</a>
+                <a :href="site" class="hidden hover:text-zamrud-800 2xl:inline">Rucisoft.id</a>
             </nav>
             <div class="flex items-center gap-3">
                 <a :href="executivePath" class="hidden text-sm font-medium text-slate-600 hover:text-zamrud-800 sm:inline lg:hidden">Eksekutif</a>
