@@ -18,8 +18,11 @@ const menu = [
     { label: 'Data demo', href: '#data-demo' },
 ];
 const open = ref(false);
+const openWorkshop = ref(false);
 const guidePath = route('guide');
 const executivePath = route('executive');
+const workshopPath = route('workshop');
+const materialsPath = route('workshop.materials');
 </script>
 
 <template>
@@ -29,6 +32,24 @@ const executivePath = route('executive');
             <nav class="hidden items-center gap-4 whitespace-nowrap text-sm font-medium text-slate-600 lg:flex xl:gap-5">
                 <a v-for="m in menu" :key="m.href" :href="base + m.href" class="hover:text-zamrud-800" :class="m.class">{{ m.label }}</a>
                 <a :href="executivePath" class="hover:text-zamrud-800">Untuk eksekutif</a>
+                <div class="relative" @mouseenter="openWorkshop = true" @mouseleave="openWorkshop = false">
+                    <button type="button" class="flex items-center gap-1 hover:text-zamrud-800" :aria-expanded="openWorkshop" @click="openWorkshop = !openWorkshop">
+                        Workshop
+                        <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.17l3.71-3.94a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" /></svg>
+                    </button>
+                    <div v-show="openWorkshop" class="absolute left-1/2 top-full w-64 -translate-x-1/2 pt-3">
+                        <div class="rounded-xl border border-gading-200 bg-white p-2 shadow-lg">
+                            <a :href="workshopPath" class="block rounded-lg px-3 py-2 hover:bg-zamrud-50">
+                                <span class="block font-semibold text-zamrud-900">Informasi workshop</span>
+                                <span class="block whitespace-normal text-xs text-slate-500">Jadwal 2 hari, biaya, dan pendaftaran</span>
+                            </a>
+                            <a :href="materialsPath" class="block rounded-lg px-3 py-2 hover:bg-zamrud-50">
+                                <span class="block font-semibold text-zamrud-900">Materi instruktur</span>
+                                <span class="block whitespace-normal text-xs text-slate-500">Alur, demo, latihan, dan video per sesi</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
                 <div class="relative" @mouseenter="open = true" @mouseleave="open = false">
                     <button type="button" class="flex items-center gap-1 hover:text-zamrud-800" :aria-expanded="open" @click="open = !open">
                         Panduan
@@ -47,6 +68,7 @@ const executivePath = route('executive');
             </nav>
             <div class="flex items-center gap-3">
                 <a :href="executivePath" class="hidden text-sm font-medium text-slate-600 hover:text-zamrud-800 sm:inline lg:hidden">Eksekutif</a>
+                <a :href="workshopPath" class="hidden text-sm font-medium text-slate-600 hover:text-zamrud-800 sm:inline lg:hidden">Workshop</a>
                 <a :href="guidePath" class="hidden text-sm font-medium text-slate-600 hover:text-zamrud-800 sm:inline lg:hidden">Panduan</a>
                 <Link :href="route('login')" class="tombol">Masuk</Link>
             </div>

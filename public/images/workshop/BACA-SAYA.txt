@@ -1,0 +1,3 @@
+Gambar materi instruktur workshop.
+Nama berkas mengikuti 'file' di resources/workshop/materi.php,
+mis. sesi-01-a.webp (boleh .jpg/.jpeg/.png).
