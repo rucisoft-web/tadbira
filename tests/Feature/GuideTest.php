@@ -58,9 +58,14 @@ class GuideTest extends TestCase
                 ->component('WorkshopMaterial')
                 ->where('session.title', 'Menyusun SRK dan jadwal')
                 ->where('session.videoId', null)
-                ->where('session.images.0.src', null)
+                ->where('session.images.0.src', '/images/workshop/sesi-04-a.webp')
                 ->where('session.prev.slug', 'sesi-3')
                 ->where('session.next.slug', 'sesi-5'));
+
+        $this->get('/workshop/materi/penutupan')
+            ->assertInertia(fn ($page) => $page
+                ->where('session.images.0.src', null)
+                ->where('session.images.0.path', 'images/workshop/penutupan-a.webp'));
 
         $this->get('/workshop/materi/tidak-ada')->assertNotFound();
     }

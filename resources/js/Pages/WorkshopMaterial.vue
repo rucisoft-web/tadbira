@@ -138,7 +138,7 @@ const activeIndex = computed(() => (elapsed.value === 0 ? -1 : flow.value.findIn
                             <div class="mt-4 grid gap-5 sm:grid-cols-2">
                                 <figure v-for="img in session.images" :key="img.file">
                                     <a v-if="img.src" :href="img.src" target="_blank" rel="noopener">
-                                        <img :src="img.src" :alt="img.caption" loading="lazy" class="aspect-[16/10] w-full rounded-xl border border-gading-200 bg-white object-cover object-top shadow" />
+                                        <img :src="img.src" :alt="img.caption" loading="lazy" class="aspect-[16/10] w-full rounded-xl border border-gading-200 bg-white object-contain shadow" />
                                     </a>
                                     <div v-else class="flex aspect-[16/10] w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed border-gading-300 bg-white p-4 text-center">
                                         <svg class="h-10 w-10 text-gading-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-8 9" /></svg>
