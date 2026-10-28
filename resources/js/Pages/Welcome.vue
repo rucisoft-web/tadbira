@@ -17,6 +17,14 @@ const whatsapp = computed(
 );
 const guestHref = computed(() => (props.demos.length ? '#data-demo' : route('login')));
 
+const prophetic = [
+    { name: 'Shiddiq', area: 'Lingkup dan Jadwal', icon: '🎯', color: '#1E40AF', text: 'Jujur dalam menetapkan hasil yang dijanjikan dan waktu penyelesaiannya. Tadbira membantu menguraikan pekerjaan, menyusun jadwal, menentukan ketergantungan antaraktivitas, serta memantau keterlambatan terhadap rencana yang disepakati.' },
+    { name: 'Amanah', area: 'Biaya dan Kualitas', icon: '💰', color: '#B45309', text: 'Menjaga kepercayaan melalui penggunaan anggaran dan pemenuhan mutu. Tadbira mendukung pencatatan anggaran dan realisasi, pemantauan kemajuan pekerjaan, serta penyimpanan dokumen bukti dan serah terima.' },
+    { name: 'Tabligh', area: 'Personalia dan Komunikasi', icon: '🤝', color: '#15803D', text: 'Memastikan setiap orang memahami tugasnya dan memperoleh informasi yang benar. Penanggung jawab, beban kerja, dasbor, dan laporan status membantu tim berkoordinasi serta menyampaikan kondisi kegiatan kepada pimpinan.' },
+    { name: 'Fathanah', area: 'Risiko dan Pengadaan', icon: '🧠', color: '#1E3A8A', text: 'Mengelola kegiatan dengan pengetahuan dan kecermatan. Pencatatan risiko, penilaian dampak, serta penyusunan tahapan pengadaan membantu tim mengantisipasi hambatan dan menentukan tindak lanjut.' },
+    { name: 'Istiqomah', area: 'Integrasi dan Konsistensi', icon: '🔄', color: '#064E3B', text: 'Menjaga seluruh bagian kegiatan tetap selaras. Dasbor portofolio, pemantauan berkala, dan pencatatan perubahan membantu pengelola menjaga kesinambungan antara rencana, pelaksanaan, dan evaluasi.' },
+];
+
 const problems = [
     { title: 'Kegiatan menumpuk di akhir tahun', text: 'Rencana kegiatan disusun di awal tahun, lalu baru bergerak menjelang triwulan IV. Penyerapan anggaran terlambat dan mutu kegiatan turun.', color: '#F97316' },
     { title: 'Kemajuan tidak terlihat', text: 'Pimpinan baru tahu sebuah kegiatan terlambat ketika rapat evaluasi, saat waktu untuk memperbaikinya sudah habis.', color: '#D4A72C' },
@@ -115,8 +123,44 @@ const faqs = [
                 </div>
             </section>
 
+            <!-- Manajemen Proyek Profetik -->
+            <section id="profetik" class="scroll-mt-20 border-y border-gading-200 bg-white py-16">
+                <div class="mx-auto max-w-6xl px-4 sm:px-6">
+                    <p class="text-sm font-semibold uppercase tracking-wider text-emas-600">Manajemen Proyek Profetik</p>
+                    <h2 class="mt-2 max-w-3xl text-3xl font-bold text-zamrud-950">Mengelola proyek, menjaga amanah.</h2>
+                    <p class="mt-3 max-w-3xl text-lg text-slate-600">Bagaimana memastikan rencana menjadi pekerjaan yang jelas, anggaran digunakan dengan bertanggung jawab, dan kemajuan dilaporkan secara jujur?</p>
+                    <div class="mt-8 grid items-start gap-10 lg:grid-cols-[1fr_1.15fr]">
+                        <figure class="lg:sticky lg:top-24">
+                            <img src="/images/panduan/00-peta-manajemen-proyek.webp" alt="Peta Manajemen Proyek Profetik: Shiddiq, Amanah, Tabligh, dan Fathanah diikat oleh Istiqomah" loading="lazy" width="1254" height="1254" class="w-full rounded-2xl border border-gading-200 shadow-lg" />
+                            <figcaption class="mt-2 text-center text-xs text-slate-500">Sembilan bidang manajemen proyek dalam empat sifat kenabian, diikat oleh istiqomah.</figcaption>
+                        </figure>
+                        <div>
+                            <p class="text-slate-600">
+                                Tadbira adalah aplikasi web untuk membantu organisasi merencanakan, memantau, dan melaporkan kegiatan atau proyek dengan pendekatan <b class="text-zamrud-900">Manajemen Proyek Profetik</b>. Pendekatan ini menghubungkan praktik manajemen proyek dengan empat sifat kenabian, yang diikat oleh <em>istiqomah</em>.
+                            </p>
+                            <ul class="mt-6 space-y-4">
+                                <li v-for="v in prophetic" :key="v.name" class="rounded-2xl border border-gading-200 p-5" :style="{ borderLeft: `4px solid ${v.color}` }">
+                                    <h3 class="font-semibold text-zamrud-950">
+                                        <span aria-hidden="true">{{ v.icon }}</span> {{ v.name }}
+                                        <span class="font-normal text-slate-500">· {{ v.area }}</span>
+                                    </h3>
+                                    <p class="mt-1.5 text-sm">{{ v.text }}</p>
+                                </li>
+                            </ul>
+                            <p class="mt-6 text-slate-600">
+                                Tadbira dapat digunakan untuk pengelolaan kegiatan perguruan tinggi, instansi, perusahaan, maupun organisasi sosial. Kegiatan dapat dihubungkan dengan sasaran dan indikator kinerja agar kontribusinya terhadap tujuan organisasi lebih mudah dipantau.
+                            </p>
+                        </div>
+                    </div>
+                    <blockquote class="mt-10 rounded-2xl bg-zamrud-50 px-6 py-6 text-center">
+                        <p class="italic text-zamrud-900">Nilai profetik menjadi pedoman perilaku; Tadbira membantu mewujudkannya dalam kebiasaan kerja yang tertib, terbuka, dan dapat dipertanggungjawabkan.</p>
+                        <p class="mt-3 font-semibold text-emas-700">Dari niat yang baik, menuju ikhtiar yang terencana dan amanah yang terlaksana.</p>
+                    </blockquote>
+                </div>
+            </section>
+
             <!-- Masalah -->
-            <section id="kenapa" class="scroll-mt-20 border-y border-gading-200 bg-white py-16">
+            <section id="kenapa" class="scroll-mt-20 py-16">
                 <div class="mx-auto max-w-6xl px-4 sm:px-6">
                     <p class="text-sm font-semibold uppercase tracking-wider text-emas-600">Masalah yang sering dihadapi</p>
                     <h2 class="mt-2 max-w-3xl text-3xl font-bold text-zamrud-950">Rencana kegiatan yang baik sering berhenti di dokumen POK.</h2>
@@ -131,7 +175,7 @@ const faqs = [
             </section>
 
             <!-- Penyebab -->
-            <section class="py-16">
+            <section class="border-y border-gading-200 bg-white py-16">
                 <div class="mx-auto max-w-6xl px-4 sm:px-6">
                     <p class="text-sm font-semibold uppercase tracking-wider text-emas-600">Mengapa masalah ini terjadi</p>
                     <h2 class="mt-2 max-w-3xl text-3xl font-bold text-zamrud-950">Akar masalahnya ada pada cara rencana dijadwalkan dan dipantau.</h2>

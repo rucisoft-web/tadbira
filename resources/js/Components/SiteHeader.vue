@@ -12,6 +12,7 @@ const props = defineProps({
 
 const base = computed(() => (props.onHome ? '' : '/'));
 const menu = [
+    { label: 'Profetik', href: '#profetik' },
     { label: 'Kenapa perlu', href: '#kenapa' },
     { label: 'Fitur', href: '#fitur' },
     { label: 'Data demo', href: '#data-demo' },
