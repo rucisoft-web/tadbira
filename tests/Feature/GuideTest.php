@@ -35,4 +35,11 @@ class GuideTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page->component('Executive')->has('demos')->has('guide')->has('links'));
     }
+
+    public function test_workshop_page_is_public(): void
+    {
+        $this->get('/workshop')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->component('Workshop')->has('demos')->has('workshop')->has('links'));
+    }
 }

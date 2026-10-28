@@ -86,6 +86,10 @@ Halaman `/panduan` (submenu **Panduan** di landing page) menampilkan panduan len
 
 Halaman `/untuk-eksekutif` (menu **Untuk eksekutif**) merangkum manfaat Tadbira bagi pimpinan: pertanyaan yang terjawab di dasbor, manfaat bagi organisasi, ritme kerja pimpinan, dan tautan ke data demo.
 
+### Halaman workshop
+
+Halaman `/workshop` (menu **Workshop** di landing page) mempromosikan workshop 2 hari mengenal Tadbira bersama Pusat Studi Manajemen Pendidikan Tinggi UIN Sunan Kalijaga Yogyakarta: akronim TADBIRA, materi, jadwal, peserta, data demo, pendaftaran, dan tanya jawab. Tanggal, tempat, biaya, kuota, batas daftar, dan tautan formulir diisi lewat `.env` (`TADBIRA_WORKSHOP_HARI1`, `TADBIRA_WORKSHOP_HARI2`, `TADBIRA_WORKSHOP_TEMPAT`, `TADBIRA_WORKSHOP_BIAYA`, `TADBIRA_WORKSHOP_KUOTA`, `TADBIRA_WORKSHOP_BATAS_DAFTAR`, `TADBIRA_WORKSHOP_FORMULIR`); yang kosong tampil "Segera diumumkan" dan tombol daftar mengarah ke WhatsApp. Brosur PDF ada di `public/files/brosur-workshop-tadbira.pdf`.
+
 ### Mode tamu
 
 Set `TADBIRA_GUEST_LOGIN=true` di `.env` untuk menampilkan kartu data demo (UIN Sunan Kalijaga, MedcoEnergi, UNJ) di halaman depan dan halaman masuk. Tamu masuk tanpa kata sandi lewat `/masuk-tamu?organisasi={ulid}` dan hanya bisa melihat; semua perubahan data ditolak. Akun tamu (`tamu@tadbira.test`) dibuat oleh `php artisan db:seed`.

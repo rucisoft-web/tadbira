@@ -42,6 +42,13 @@ Route::get('/untuk-eksekutif', fn () => Inertia::render('Executive', [
     'guide' => UserGuide::sections(),
 ]))->name('executive');
 
+Route::get('/workshop', fn () => Inertia::render('Workshop', [
+    'demos' => GuestDemo::cards(),
+    'links' => config('tadbira.landing'),
+    'guide' => UserGuide::sections(),
+    'workshop' => config('tadbira.workshop'),
+]))->name('workshop');
+
 Route::get('/panduan', fn () => Inertia::render('Guide', [
     ...UserGuide::render(),
     'links' => config('tadbira.landing'),

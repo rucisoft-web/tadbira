@@ -107,6 +107,14 @@ const faqs = [
                             <a :href="route('guide')" class="tombol-sekunder">Baca panduannya</a>
                         </div>
                         <p class="mt-3 text-sm text-slate-500">Tanpa akun. Mode tamu hanya untuk melihat.</p>
+                        <a :href="route('workshop')" class="mt-6 flex max-w-md items-center gap-3 rounded-2xl border border-gading-200 bg-white p-3 hover:border-zamrud-400 hover:shadow-md">
+                            <img src="/images/mitra/uin-sunan-kalijaga.png" alt="Logo UIN Sunan Kalijaga" class="h-11 w-auto" width="326" height="400" />
+                            <span class="text-sm">
+                                <span class="block font-semibold text-zamrud-950">Workshop 2 hari mengenal Tadbira</span>
+                                <span class="text-slate-500">Bersama Pusat Studi Manajemen Pendidikan Tinggi UIN Sunan Kalijaga</span>
+                                <span class="block font-semibold text-zamrud-700">Lihat jadwal dan daftar →</span>
+                            </span>
+                        </a>
                     </div>
                     <figure>
                         <img src="/images/demo/dasbor.webp" alt="Dasbor portofolio Tadbira dengan data demo" class="w-full rounded-2xl border border-gading-200 shadow-xl" width="1200" height="750" />

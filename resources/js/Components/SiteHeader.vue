@@ -19,6 +19,7 @@ const menu = [
 const open = ref(false);
 const guidePath = route('guide');
 const executivePath = route('executive');
+const workshopPath = route('workshop');
 </script>
 
 <template>
@@ -28,6 +29,7 @@ const executivePath = route('executive');
             <nav class="hidden items-center gap-4 whitespace-nowrap text-sm font-medium text-slate-600 lg:flex xl:gap-5">
                 <a v-for="m in menu" :key="m.href" :href="base + m.href" class="hover:text-zamrud-800">{{ m.label }}</a>
                 <a :href="executivePath" class="hover:text-zamrud-800">Untuk eksekutif</a>
+                <a :href="workshopPath" class="hover:text-zamrud-800">Workshop</a>
                 <div class="relative" @mouseenter="open = true" @mouseleave="open = false">
                     <button type="button" class="flex items-center gap-1 hover:text-zamrud-800" :aria-expanded="open" @click="open = !open">
                         Panduan
@@ -46,6 +48,7 @@ const executivePath = route('executive');
             </nav>
             <div class="flex items-center gap-3">
                 <a :href="executivePath" class="hidden text-sm font-medium text-slate-600 hover:text-zamrud-800 sm:inline lg:hidden">Eksekutif</a>
+                <a :href="workshopPath" class="hidden text-sm font-medium text-slate-600 hover:text-zamrud-800 sm:inline lg:hidden">Workshop</a>
                 <a :href="guidePath" class="hidden text-sm font-medium text-slate-600 hover:text-zamrud-800 sm:inline lg:hidden">Panduan</a>
                 <Link :href="route('login')" class="tombol">Masuk</Link>
             </div>

@@ -70,6 +70,18 @@ return [
         'academy' => env('TADBIRA_URL_ACADEMY', 'https://rucisoft.id/academy?produk=tadbira'),
         'solution' => env('TADBIRA_URL_SOLUTION', 'https://rucisoft.id/solusi/tadbira'),
         'whatsapp' => env('TADBIRA_WHATSAPP', '6281199892939'),
+        'email' => env('TADBIRA_EMAIL', 'rucisoft@gmail.com'),
+    ],
+
+    // Halaman /workshop. Isi lewat .env; yang kosong tampil "segera diumumkan".
+    'workshop' => [
+        'day1' => env('TADBIRA_WORKSHOP_HARI1'),
+        'day2' => env('TADBIRA_WORKSHOP_HARI2'),
+        'place' => env('TADBIRA_WORKSHOP_TEMPAT'),
+        'fee' => env('TADBIRA_WORKSHOP_BIAYA'),
+        'quota' => env('TADBIRA_WORKSHOP_KUOTA'),
+        'deadline' => env('TADBIRA_WORKSHOP_BATAS_DAFTAR'),
+        'form' => env('TADBIRA_WORKSHOP_FORMULIR'),
     ],
 
     'sectors' => [
