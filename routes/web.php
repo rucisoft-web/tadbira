@@ -22,6 +22,7 @@ use App\Http\Controllers\TaskController;
 use App\Http\Controllers\TemplateController;
 use App\Support\GuestDemo;
 use App\Support\UserGuide;
+use App\Support\WorkshopMaterial;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -48,6 +49,19 @@ Route::get('/workshop', fn () => Inertia::render('Workshop', [
     'guide' => UserGuide::sections(),
     'workshop' => config('tadbira.workshop'),
 ]))->name('workshop');
+
+Route::get('/workshop/materi', fn () => Inertia::render('WorkshopMaterials', [
+    'sessions' => WorkshopMaterial::outline(),
+    'links' => config('tadbira.landing'),
+    'guide' => UserGuide::sections(),
+]))->name('workshop.materials');
+
+Route::get('/workshop/materi/{slug}', fn (string $slug) => Inertia::render('WorkshopMaterial', [
+    'session' => WorkshopMaterial::find($slug) ?? abort(404),
+    'sessions' => WorkshopMaterial::outline(),
+    'links' => config('tadbira.landing'),
+    'guide' => UserGuide::sections(),
+]))->name('workshop.material');
 
 Route::get('/panduan', fn () => Inertia::render('Guide', [
     ...UserGuide::render(),

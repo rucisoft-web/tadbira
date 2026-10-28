@@ -42,4 +42,42 @@ class GuideTest extends TestCase
             ->assertOk()
             ->assertInertia(fn ($page) => $page->component('Workshop')->has('demos')->has('workshop')->has('links'));
     }
+
+    public function test_workshop_materials_list_every_session(): void
+    {
+        $this->get('/workshop/materi')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page->component('WorkshopMaterials')->has('sessions', 13));
+    }
+
+    public function test_workshop_session_page_and_placeholders(): void
+    {
+        $this->get('/workshop/materi/sesi-4')
+            ->assertOk()
+            ->assertInertia(fn ($page) => $page
+                ->component('WorkshopMaterial')
+                ->where('session.title', 'Menyusun SRK dan jadwal')
+                ->where('session.videoId', null)
+                ->where('session.images.0.src', null)
+                ->where('session.prev.slug', 'sesi-3')
+                ->where('session.next.slug', 'sesi-5'));
+
+        $this->get('/workshop/materi/tidak-ada')->assertNotFound();
+    }
+
+    public function test_youtube_links_become_video_ids(): void
+    {
+        foreach ([
+            'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+            'https://youtu.be/dQw4w9WgXcQ?si=abc',
+            'https://www.youtube.com/embed/dQw4w9WgXcQ',
+            'https://www.youtube.com/watch?feature=share&v=dQw4w9WgXcQ',
+            'dQw4w9WgXcQ',
+        ] as $url) {
+            $this->assertSame('dQw4w9WgXcQ', \App\Support\WorkshopMaterial::youtubeId($url), $url);
+        }
+
+        $this->assertNull(\App\Support\WorkshopMaterial::youtubeId(''));
+        $this->assertNull(\App\Support\WorkshopMaterial::youtubeId('https://vimeo.com/123'));
+    }
 }
