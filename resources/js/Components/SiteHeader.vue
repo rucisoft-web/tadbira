@@ -42,7 +42,7 @@ const executivePath = route('executive');
                         </div>
                     </div>
                 </div>
-                <a :href="base + '#tanya'" class="hover:text-zamrud-800">Tanya jawab</a>
+                <a :href="base + '#tanya'" class="hidden hover:text-zamrud-800 xl:inline">Tanya jawab</a>
                 <a :href="site" class="hidden hover:text-zamrud-800 2xl:inline">Rucisoft.id</a>
             </nav>
             <div class="flex items-center gap-3">
